@@ -1,6 +1,6 @@
 # Proposal: optional Touch ID setup for sudo
 
-**Status:** proposal for maintainer feedback; no PAM changes or new command are implemented.
+**Status:** opt-in setup script for review; no Fnox CLI command or automatic setup is added.
 
 [iTerm2's Touch ID installer](https://github.com/gnachman/iTerm2/blob/56071501a0503d414dd5b4a4586e2d7d8a9e9cbe/Resources/install-touchid-sudo.sh) enables Apple's existing Touch ID authentication module for sudo. Fnox could adopt its transparent, opt-in setup pattern as an optional macOS convenience, starting with a read-only diagnostic in `fnox doctor`.
 
@@ -12,7 +12,17 @@ The [Swift helper](https://github.com/gnachman/iTerm2/blob/56071501a0503d414dd5b
 
 These are separate checks: a configured module is not proof that Touch ID works in the current terminal session, and the ability to evaluate a biometric policy is not proof that sudo will choose it.
 
-## Possible Fnox enhancement
+## Try the opt-in script
+
+Run `bash scripts/enable-sudo-touch-id.sh --check` to inspect configuration, then `bash scripts/enable-sudo-touch-id.sh --dry-run` to see the planned change. To apply it, explicitly run `sudo bash scripts/enable-sudo-touch-id.sh --apply`. The script never elevates itself or runs during installation.
+
+An existing `sudo_local` is backed up beside the original before atomic replacement. If no file exists, the system template is required. The script preserves unrelated rules, refuses duplicate or unusual active Touch ID rules, and rejects symlinked configuration files. It reports configured status, not proof that biometric authentication succeeds.
+
+For rollback, inspect any changes made since setup before restoring the printed backup, or remove the new `sudo_local` only if it still contains solely the intended setup. This first script does not automate rollback or provide hardware/session diagnostics.
+
+`--pam-dir` accepts an alternate directory for unprivileged fixtures; it refuses to operate on fixture directories as root. The fixture tests run with `bash test/scripts/sudo-touch-id.sh`. No installer was run against live system files during development.
+
+## Possible Fnox CLI enhancement
 
 Start with a macOS-only, read-only `fnox doctor` check. Report whether the local sudo PAM stack includes `sudo_local`, whether an active Touch ID entry exists there, and whether the current process can evaluate biometric authentication. Distinguish unavailable hardware, unavailable session, missing configuration, and unknown status. Do not promise success based only on a substring match in a file.
 
