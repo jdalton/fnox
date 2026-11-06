@@ -32,8 +32,13 @@ export const FINGERPRINT_GEOMETRY = Object.freeze({
 export const FINGERPRINT_GRAY_FADE_VISITED = 0.72
 export const FINGERPRINT_FALLBACK_PALE_MIX = 0.66
 
-const fingerprintPalette = (theme: typeof DARK_THEME | typeof LIGHT_THEME) =>
-  [theme.resting, theme.incoming, theme.success, theme.check, theme.trail]
+const fingerprintPalette = (theme: typeof DARK_THEME | typeof LIGHT_THEME) => [
+  theme.resting,
+  theme.incoming,
+  theme.success,
+  theme.check,
+  theme.trail,
+]
 export const FINGERPRINT_PALETTES = Object.freeze({
   light: fingerprintPalette(LIGHT_THEME),
   dark: fingerprintPalette(DARK_THEME),
@@ -57,10 +62,10 @@ export function fingerprintFrame(
       milliseconds / 1000 -
       flow.start) *
     flow.fps
-  const extents = flow.frames.map(samples =>
+  const extents = flow.frames.map((samples) =>
     sampleFingerprintFlow(samples, position),
   )
-  const visited = visitedFrames.map(samples =>
+  const visited = visitedFrames.map((samples) =>
     sampleFingerprintFlow(samples, position, true),
   )
   const progress = clampFingerprintProgress(
@@ -135,11 +140,11 @@ export function parseFingerprintColor(color: string): number[] {
   return color
     .slice(1)
     .match(/.{2}/g)!
-    .map(channel => Number.parseInt(channel, 16))
+    .map((channel) => Number.parseInt(channel, 16))
 }
 
 export function fingerprintColorLuminance(color: string): number {
-  const channels = parseFingerprintColor(color).map(channel => {
+  const channels = parseFingerprintColor(color).map((channel) => {
     const value = channel / 255
     return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4
   })
@@ -176,7 +181,7 @@ export function sampleFingerprintFlow(
 
 export function fingerprintVisitedFrames(samples: readonly number[]): number[] {
   let peak = 0
-  return samples.map(value => (peak = Math.max(peak, value)))
+  return samples.map((value) => (peak = Math.max(peak, value)))
 }
 
 export function fingerprintDash(

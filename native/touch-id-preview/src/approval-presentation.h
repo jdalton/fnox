@@ -8,13 +8,12 @@ namespace fnox {
 constexpr CGFloat kFingerprintArtworkSize = 96;
 
 inline NSRect AuthenticationHostFrame(NSSize contentSize, CGFloat y) {
-  return NSMakeRect((contentSize.width - kFingerprintArtworkSize) / 2, y,
-                    kFingerprintArtworkSize, kFingerprintArtworkSize);
+  return NSMakeRect((contentSize.width - kFingerprintArtworkSize) / 2, y, kFingerprintArtworkSize,
+                    kFingerprintArtworkSize);
 }
 
-inline void LayoutAuthenticationHost(
-    NSView* authenticationHost, NSView* nativeAuthenticationView,
-    NSView* shieldView, NSRect frame) {
+inline void LayoutAuthenticationHost(NSView* authenticationHost, NSView* nativeAuthenticationView,
+                                     NSView* shieldView, NSRect frame) {
   authenticationHost.frame = frame;
   nativeAuthenticationView.frame = authenticationHost.bounds;
   nativeAuthenticationView.alphaValue = 1;
@@ -26,12 +25,11 @@ inline void LayoutAuthenticationHost(
   if (shieldView != nil) [shieldView removeFromSuperview];
 }
 
-inline void PrepareFingerprintForAuthentication(
-    NSView* panelContent, NSView* authenticationHost,
-    NSView* nativeAuthenticationView, NSView* shieldView,
-    NSView* customFingerprintView, NSRect frame) {
-  LayoutAuthenticationHost(authenticationHost, nativeAuthenticationView,
-                           shieldView, frame);
+inline void PrepareFingerprintForAuthentication(NSView* panelContent, NSView* authenticationHost,
+                                                NSView* nativeAuthenticationView,
+                                                NSView* shieldView, NSView* customFingerprintView,
+                                                NSRect frame) {
+  LayoutAuthenticationHost(authenticationHost, nativeAuthenticationView, shieldView, frame);
   customFingerprintView.frame = frame;
   customFingerprintView.hidden = NO;
   customFingerprintView.alphaValue = 1;
@@ -40,10 +38,9 @@ inline void PrepareFingerprintForAuthentication(
                 relativeTo:authenticationHost];
 }
 
-inline bool PresentAuthenticatedFingerprint(
-    NSView* panelContent, NSView* nativeAuthenticationView,
-    NSView* customFingerprintView, NSRect frame, bool authenticated,
-    bool cancelled) {
+inline bool PresentAuthenticatedFingerprint(NSView* panelContent, NSView* nativeAuthenticationView,
+                                            NSView* customFingerprintView, NSRect frame,
+                                            bool authenticated, bool cancelled) {
   if (!authenticated || cancelled) return false;
   if (customFingerprintView.superview != panelContent) return false;
   customFingerprintView.frame = frame;
@@ -54,6 +51,6 @@ inline bool PresentAuthenticatedFingerprint(
   return true;
 }
 
-} // namespace fnox
+}  // namespace fnox
 
 #endif

@@ -21,7 +21,7 @@ add_custom_command(
   COMMAND "${NODE_EXECUTABLE}" --experimental-strip-types
           "${CMAKE_CURRENT_SOURCE_DIR}/build-header.mts" "${GENERATED_DIR}"
   DEPENDS
-    build-header.mts animation.mts native.mts theme.mts
+    build-header.mts animation.mts native.mts theme.mts color.mts
     assets/geometry.svg assets/flow.json
   VERBATIM
 )
@@ -29,18 +29,13 @@ add_custom_target(fnox-touch-id-preview-fingerprint DEPENDS "${FINGERPRINT_HEADE
 
 add_executable(fnox-touch-id-preview MACOSX_BUNDLE EXCLUDE_FROM_ALL
   preview/approval.mm
-  src/approval-readiness.cc
   src/approval-prompt.mm
   src/fingerprint-view.mm
-  src/file-identity.cc
-  src/input-policy.cc
-  src/secret-buffer.cc
 )
 add_dependencies(fnox-touch-id-preview fnox-touch-id-preview-fingerprint)
 target_include_directories(fnox-touch-id-preview PRIVATE
   src "${GENERATED_DIR}" generated
 )
-target_compile_definitions(fnox-touch-id-preview PRIVATE FNOX_TOUCH_PREVIEW=1)
 target_compile_options(fnox-touch-id-preview PRIVATE
   $<$<COMPILE_LANGUAGE:OBJCXX>:-fobjc-arc>
 )

@@ -1,9 +1,9 @@
 #import "fingerprint-view.h"
-#import "approval-button-style.h"
 #import <QuartzCore/QuartzCore.h>
-#include "fingerprint-animation.generated.h"
 #include <algorithm>
 #include <cmath>
+#import "approval-button-style.h"
+#include "fingerprint-animation.generated.h"
 
 double FnoxFingerprintApprovalDuration(BOOL reduceMotion) {
   return reduceMotion ? kFingerprintReducedMotionDuration : kFingerprintApprovalDuration;
@@ -32,7 +32,9 @@ double FnoxFingerprintApprovalDuration(BOOL reduceMotion) {
   [super viewDidChangeEffectiveAppearance];
   [self updateShieldColor];
 }
-- (BOOL)isAccessibilityElement { return NO; }
+- (BOOL)isAccessibilityElement {
+  return NO;
+}
 - (NSView*)hitTest:(NSPoint)point {
   (void)point;
   return nil;
@@ -40,6 +42,9 @@ double FnoxFingerprintApprovalDuration(BOOL reduceMotion) {
 @end
 
 namespace {
+constexpr CGFloat kFingerprintNudgeDistance = 1.25;
+constexpr CFTimeInterval kFingerprintNudgeDuration = 0.18;
+
 void ScaleFingerprintLayers(CALayer* layer, CGFloat scale) {
   if (layer == nil) return;
   layer.contentsScale = std::max<CGFloat>(1, scale);
@@ -48,7 +53,10 @@ void ScaleFingerprintLayers(CALayer* layer, CGFloat scale) {
 }
 CGColorRef FingerprintColor(uint32_t color) {
   return [NSColor colorWithSRGBRed:((color >> 16) & 255) / 255.0
-      green:((color >> 8) & 255) / 255.0 blue:(color & 255) / 255.0 alpha:1].CGColor;
+                             green:((color >> 8) & 255) / 255.0
+                              blue:(color & 255) / 255.0
+                             alpha:1]
+      .CGColor;
 }
 CAShapeLayer* FingerprintShape(CGPathRef path, CGFloat scale) {
   CAShapeLayer* shape = [CAShapeLayer layer];
@@ -60,7 +68,7 @@ CAShapeLayer* FingerprintShape(CGPathRef path, CGFloat scale) {
   shape.lineJoin = kCALineJoinRound;
   return shape;
 }
-}
+}  // namespace
 
 @interface FnoxFingerprintView ()
 @property(nonatomic, strong) CALayer* imageLayer;
@@ -97,7 +105,8 @@ CAShapeLayer* FingerprintShape(CGPathRef path, CGFloat scale) {
   NSMutableArray<CAShapeLayer*>* trails = [NSMutableArray array];
   NSMutableArray<CAShapeLayer*>* highlights = [NSMutableArray array];
   const CGFloat scale = NSWidth(self.bounds) / 288;
-  const CGAffineTransform transform = CGAffineTransformMake(scale, 0, 0, -scale, 0, NSHeight(self.bounds));
+  const CGAffineTransform transform =
+      CGAffineTransformMake(scale, 0, 0, -scale, 0, NSHeight(self.bounds));
   for (unsigned index = 0; index < kFingerprintRidgeCount; ++index) {
     CGPathRef path = CreateFingerprintRidge(index, &transform);
     CAShapeLayer* ridge = FingerprintShape(path, scale);
@@ -125,8 +134,9 @@ CAShapeLayer* FingerprintShape(CGPathRef path, CGFloat scale) {
 }
 - (void)renderSample:(unsigned)index {
   self.sampleIndex = std::min(index, kFingerprintSampleCount - 1);
-  const BOOL dark = [[self.effectiveAppearance bestMatchFromAppearancesWithNames:
-      @[NSAppearanceNameAqua, NSAppearanceNameDarkAqua]] isEqualToString:NSAppearanceNameDarkAqua];
+  const BOOL dark = [[self.effectiveAppearance
+      bestMatchFromAppearancesWithNames:@[ NSAppearanceNameAqua, NSAppearanceNameDarkAqua ]]
+      isEqualToString:NSAppearanceNameDarkAqua];
   const FingerprintSample& sample = kFingerprintSamples[dark ? 1 : 0][self.sampleIndex];
   [CATransaction begin];
   [CATransaction setDisableActions:YES];
@@ -161,11 +171,12 @@ CAShapeLayer* FingerprintShape(CGPathRef path, CGFloat scale) {
     for (CAShapeLayer* highlight in self.highlights) highlight.opacity = 0;
   }
   const CGFloat scale = NSWidth(self.bounds) / 288;
-  const CGAffineTransform transform = CGAffineTransformMake(scale, 0, 0, -scale, 0, NSHeight(self.bounds));
+  const CGAffineTransform transform =
+      CGAffineTransformMake(scale, 0, 0, -scale, 0, NSHeight(self.bounds));
   CGMutablePathRef circle = CGPathCreateMutable();
   if (sample.span > 0) {
-    CGPathAddArc(circle, &transform, kFingerprintCenterX, kFingerprintCenterY,
-        kFingerprintRadius, -M_PI_2 - sample.span / 2, -M_PI_2 + sample.span / 2, false);
+    CGPathAddArc(circle, &transform, kFingerprintCenterX, kFingerprintCenterY, kFingerprintRadius,
+                 -M_PI_2 - sample.span / 2, -M_PI_2 + sample.span / 2, false);
     if (sample.span >= 2 * M_PI - 0.000001) CGPathCloseSubpath(circle);
   }
   self.ring.path = circle;
@@ -205,16 +216,17 @@ CAShapeLayer* FingerprintShape(CGPathRef path, CGFloat scale) {
   CAKeyframeAnimation* nudge = [CAKeyframeAnimation animationWithKeyPath:@"position"];
   nudge.values = @[
     [NSValue valueWithPoint:origin],
-    [NSValue valueWithPoint:NSMakePoint(origin.x, origin.y + 1.25)],
-    [NSValue valueWithPoint:NSMakePoint(origin.x, origin.y - 1.25)],
-    [NSValue valueWithPoint:NSMakePoint(origin.x - 1.25, origin.y)],
-    [NSValue valueWithPoint:NSMakePoint(origin.x + 1.25, origin.y)],
+    [NSValue valueWithPoint:NSMakePoint(origin.x, origin.y + kFingerprintNudgeDistance)],
+    [NSValue valueWithPoint:NSMakePoint(origin.x, origin.y - kFingerprintNudgeDistance)],
+    [NSValue valueWithPoint:NSMakePoint(origin.x - kFingerprintNudgeDistance, origin.y)],
+    [NSValue valueWithPoint:NSMakePoint(origin.x + kFingerprintNudgeDistance, origin.y)],
     [NSValue valueWithPoint:origin],
   ];
-  nudge.keyTimes = @[@0, @0.16, @0.32, @0.48, @0.64, @1];
-  nudge.duration = 0.18;
+  nudge.keyTimes = @[ @0, @0.16, @0.32, @0.48, @0.64, @1 ];
+  nudge.duration = kFingerprintNudgeDuration;
   nudge.calculationMode = kCAAnimationLinear;
-  nudge.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
+  nudge.timingFunction =
+      [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
   [self.imageLayer removeAnimationForKey:@"fingerprintNudge"];
   [self.imageLayer addAnimation:nudge forKey:@"fingerprintNudge"];
 }
@@ -227,21 +239,32 @@ CAShapeLayer* FingerprintShape(CGPathRef path, CGFloat scale) {
     return;
   }
   __weak FnoxFingerprintView* weakSelf = self;
-  self.timer = [NSTimer timerWithTimeInterval:1.0 / kFingerprintSampleRate repeats:YES block:^(NSTimer* timer) {
-    FnoxFingerprintView* view = weakSelf;
-    if (view == nil || view.window == nil) { [timer invalidate]; return; }
-    [view tickAnimation];
-  }];
+  self.timer = [NSTimer timerWithTimeInterval:1.0 / kFingerprintSampleRate
+                                      repeats:YES
+                                        block:^(NSTimer* timer) {
+                                          FnoxFingerprintView* view = weakSelf;
+                                          if (view == nil || view.window == nil) {
+                                            [timer invalidate];
+                                            return;
+                                          }
+                                          [view tickAnimation];
+                                        }];
   [[NSRunLoop mainRunLoop] addTimer:self.timer forMode:NSRunLoopCommonModes];
 }
 - (void)tickAnimation {
   const double elapsed = CACurrentMediaTime() - self.startedAt;
   const unsigned index = static_cast<unsigned>(std::max(0.0, elapsed) * kFingerprintSampleRate);
   [self renderSample:index];
-  if (index >= kFingerprintSampleCount - 1) { [self.timer invalidate]; self.timer = nil; }
+  if (index >= kFingerprintSampleCount - 1) {
+    [self.timer invalidate];
+    self.timer = nil;
+  }
 }
 - (void)viewWillMoveToWindow:(NSWindow*)window {
-  if (window == nil) { [self.timer invalidate]; self.timer = nil; }
+  if (window == nil) {
+    [self.timer invalidate];
+    self.timer = nil;
+  }
   [super viewWillMoveToWindow:window];
 }
 @end

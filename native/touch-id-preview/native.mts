@@ -13,7 +13,7 @@ export const FINGERPRINT_NATIVE_FPS = 120
 export function fingerprintNativePaths(svg: string): string[] {
   const paths = Array.from(
     svg.matchAll(/<path[^>]*\bd="([^"]+)"/g),
-    match => match[1]!,
+    (match) => match[1]!,
   )
   if (paths.length !== FINGERPRINT_GEOMETRY.ridgeCount) {
     throw new Error('Fingerprint requires 22 ridge paths')
@@ -63,7 +63,7 @@ export function createFingerprintNativeHeader(
     `{${values.map(number).join(',')}}`
   const color = (value: string) => `0x${value.slice(1)}`
   const palettes = [FINGERPRINT_PALETTES.light, FINGERPRINT_PALETTES.dark]
-  const tables = palettes.map(palette =>
+  const tables = palettes.map((palette) =>
     Array.from({ length: count }, (_, index) => {
       const frame = fingerprintFrame(
         (index * 1000) / FINGERPRINT_NATIVE_FPS,
@@ -104,4 +104,3 @@ inline CGPathRef CreateFingerprintRidge(unsigned index, const CGAffineTransform*
 }
 `
 }
-

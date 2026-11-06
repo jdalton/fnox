@@ -29,6 +29,8 @@ Please tweak the colors to taste. `theme.mts` holds the dark palette, the OKLab 
 
 `animation.mts` contains the animation timing and palette roles. `preview/approval.mm` draws the preview ribbon. Generated animation and theme headers belong in the CMake build directory.
 
+See [THEME.md](THEME.md) for the exact formula, role offsets, contrast checks, and limitations.
+
 ## Production boundary
 
 The preview supplies a fake authorization context. Shift+Return only demonstrates the presentation; it is not biometric authentication. The production design must bind approval to the requested operation and have the operating system enforce access to the protected Keychain item using the same `LAContext`.

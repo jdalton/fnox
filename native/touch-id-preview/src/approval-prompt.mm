@@ -2,14 +2,13 @@
 #import <Foundation/Foundation.h>
 #import <LocalAuthenticationEmbeddedUI/LocalAuthenticationEmbeddedUI.h>
 #import <QuartzCore/QuartzCore.h>
-#import "fingerprint-view.h"
-#import "approval-presentation.h"
 #import "approval-button-style.h"
+#import "approval-presentation.h"
 #include "detail-copy-icons.generated.h"
+#import "fingerprint-view.h"
 
 #include "approval-prompt.h"
 #include "approval-readiness.h"
-#include "input-policy.h"
 
 #include <algorithm>
 #include <chrono>
@@ -17,9 +16,7 @@
 #include <string>
 #include <vector>
 
-#ifdef FNOX_TOUCH_PREVIEW
 extern bool FnoxPreviewAcceptTouchId();
-#endif
 
 constexpr CGFloat kFingerprintClipBottomInset = 18;
 constexpr CGFloat kExpandedFooterHeight = 72;
@@ -30,70 +27,53 @@ constexpr CGFloat kExpandedTopInset = 20;
 constexpr CFTimeInterval kTextShimmerLeadIn = 0.8;
 constexpr CFTimeInterval kTextShimmerSweep = 1.8;
 constexpr CFTimeInterval kTextShimmerRest = 5.2;
-constexpr CFTimeInterval kTextShimmerCycle =
-    kTextShimmerSweep + kTextShimmerRest;
+constexpr CFTimeInterval kTextShimmerCycle = kTextShimmerSweep + kTextShimmerRest;
 constexpr auto kApprovalReadinessTimeout = std::chrono::seconds(5);
 
 NSColor* FnoxBrandColor() {
-  return [NSColor colorWithName:nil dynamicProvider:^NSColor*(NSAppearance* appearance) {
-    return fnox::ThemeColor(fnox::kThemeGold, appearance);
-  }];
+  return [NSColor colorWithName:nil
+                dynamicProvider:^NSColor*(NSAppearance* appearance) {
+                  return fnox::ThemeColor(fnox::kThemeAccent, appearance);
+                }];
 }
 
 NSColor* FnoxButtonTitleColor() {
-  return [NSColor colorWithName:nil dynamicProvider:^NSColor*(NSAppearance* appearance) {
-    return fnox::ThemeColor(fnox::kThemeGold, appearance);
-  }];
-}
-
-fnox::ApprovalPresentationState ApprovalPresentationStateFor(
-    NSPanel* panel, NSView* authenticationHost,
-    LAAuthenticationView* authenticationView) {
-  const NSRect hostVisibleRect = authenticationHost.visibleRect;
-  const NSRect authenticationVisibleRect = authenticationView.visibleRect;
-  return {
-      .application_active = NSApp.isActive != NO,
-      .panel_key = panel.isKeyWindow != NO,
-      .panel_visible = panel.isVisible && panel.alphaValue > 0,
-      .authentication_host_attached = authenticationHost.window == panel,
-      .authentication_host_visible =
-          !authenticationHost.isHiddenOrHasHiddenAncestor &&
-          authenticationHost.alphaValue > 0 && !NSIsEmptyRect(hostVisibleRect),
-      .authentication_view_attached = authenticationView.window == panel,
-      .authentication_view_visible =
-          !authenticationView.isHiddenOrHasHiddenAncestor &&
-          authenticationView.alphaValue > 0 &&
-          !NSIsEmptyRect(authenticationVisibleRect),
-  };
+  return [NSColor colorWithName:nil
+                dynamicProvider:^NSColor*(NSAppearance* appearance) {
+                  return fnox::ThemeColor(fnox::kThemeAccent, appearance);
+                }];
 }
 
 NSColor* FnoxCopyIconColor() {
-  return [NSColor colorWithName:nil dynamicProvider:^NSColor*(NSAppearance* appearance) {
-    return fnox::ThemeColor(fnox::kThemeHighlight, appearance);
-  }];
+  return [NSColor colorWithName:nil
+                dynamicProvider:^NSColor*(NSAppearance* appearance) {
+                  return fnox::ThemeColor(fnox::kThemeHighlight, appearance);
+                }];
 }
 
 NSColor* FnoxHeadingColor() {
-  return [NSColor colorWithName:nil dynamicProvider:^NSColor*(NSAppearance* appearance) {
-    return fnox::ThemeColor(fnox::kThemeHeading, appearance);
-  }];
+  return [NSColor colorWithName:nil
+                dynamicProvider:^NSColor*(NSAppearance* appearance) {
+                  return fnox::ThemeColor(fnox::kThemeHeading, appearance);
+                }];
 }
 
 NSColor* FnoxInstructionColor() {
-  return [NSColor colorWithName:nil dynamicProvider:^NSColor*(NSAppearance* appearance) {
-    return fnox::ThemeColor(fnox::kThemeGold, appearance);
-  }];
+  return [NSColor colorWithName:nil
+                dynamicProvider:^NSColor*(NSAppearance* appearance) {
+                  return fnox::ThemeColor(fnox::kThemeAccent, appearance);
+                }];
 }
 
 NSColor* FnoxShimmerHighlightColor() {
-  return [NSColor colorWithName:nil dynamicProvider:^NSColor*(NSAppearance* appearance) {
-    return fnox::ThemeColor(fnox::kThemeShimmer, appearance);
-  }];
+  return [NSColor colorWithName:nil
+                dynamicProvider:^NSColor*(NSAppearance* appearance) {
+                  return fnox::ThemeColor(fnox::kThemeShimmer, appearance);
+                }];
 }
 
 NSAppearance* AppearanceForView(NSView* view) {
-  return view.effectiveAppearance != nil
-      ? view.effectiveAppearance : NSApp.effectiveAppearance;
+  return view.effectiveAppearance != nil ? view.effectiveAppearance : NSApp.effectiveAppearance;
 }
 
 NSColor* ColorForAppearance(NSColor* color, NSAppearance* appearance) {
@@ -120,10 +100,9 @@ API_AVAILABLE(macos(26.0))
 @implementation FnoxApprovalGlassView
 - (void)updateSurface {
   NSAppearanceName appearance = [self.effectiveAppearance
-      bestMatchFromAppearancesWithNames:@[
-        NSAppearanceNameAqua, NSAppearanceNameDarkAqua]];
+      bestMatchFromAppearancesWithNames:@[ NSAppearanceNameAqua, NSAppearanceNameDarkAqua ]];
   const BOOL lightFrost = self.style == NSGlassEffectViewStyleRegular &&
-      ![appearance isEqualToString:NSAppearanceNameDarkAqua];
+                          ![appearance isEqualToString:NSAppearanceNameDarkAqua];
   const BOOL regularGlass = self.style == NSGlassEffectViewStyleRegular;
   const BOOL reduceTransparency =
       NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceTransparency;
@@ -132,11 +111,12 @@ API_AVAILABLE(macos(26.0))
   self.contentView.layer.masksToBounds = YES;
   NSColor* tint = NSColor.clearColor;
   if (lightFrost) {
-    tint = [NSColor colorWithSRGBRed:0.98 green:0.97 blue:0.95
-        alpha:reduceTransparency ? 1 : 0.24];
+    tint = [NSColor colorWithSRGBRed:0.98 green:0.97 blue:0.95 alpha:reduceTransparency ? 1 : 0.24];
   } else if (regularGlass) {
-    tint = [NSColor colorWithSRGBRed:10.0 / 255 green:14.0 / 255
-        blue:26.0 / 255 alpha:reduceTransparency ? 1 : 0.88];
+    tint = [NSColor colorWithSRGBRed:10.0 / 255
+                               green:14.0 / 255
+                                blue:26.0 / 255
+                               alpha:reduceTransparency ? 1 : 0.88];
   }
   self.contentView.layer.backgroundColor = tint.CGColor;
 }
@@ -153,21 +133,18 @@ API_AVAILABLE(macos(26.0))
 void DrawFnoxFocusRing(NSView* view) {
   if (view.window == nil || view.window.firstResponder != view ||
       ![view.window isKindOfClass:[FnoxApprovalPanel class]] ||
-      !((FnoxApprovalPanel*)view.window).keyboardFocusVisible) return;
-  const BOOL bordered = [view isKindOfClass:[NSButton class]] &&
-      ((NSButton*)view).bordered;
-  NSBezierPath* ring = bordered
-      ? [NSBezierPath bezierPathWithRoundedRect:NSInsetRect(view.bounds, 0.5, 2.5)
-                                        xRadius:6 yRadius:6]
-      : fnox::ApprovalButtonFocusPath(view.bounds);
+      !((FnoxApprovalPanel*)view.window).keyboardFocusVisible)
+    return;
+  const BOOL bordered = [view isKindOfClass:[NSButton class]] && ((NSButton*)view).bordered;
+  NSBezierPath* ring =
+      bordered ? [NSBezierPath bezierPathWithRoundedRect:NSInsetRect(view.bounds, 0.5, 2.5)
+                                                 xRadius:6
+                                                 yRadius:6]
+               : fnox::ApprovalButtonFocusPath(view.bounds);
   ring.lineWidth = fnox::kApprovalButtonFocusWidth;
-  [ColorForAppearance(FnoxBrandColor(),
-                      AppearanceForView(view)) setStroke];
+  [ColorForAppearance(FnoxBrandColor(), AppearanceForView(view)) setStroke];
   [ring stroke];
 }
-
-
-
 
 @interface FnoxDetailCopyButton : NSButton
 @property(copy) NSString* payload;
@@ -194,11 +171,11 @@ void DrawFnoxFocusRing(NSView* view) {
 - (void)drawRect:(NSRect)dirtyRect {
   {
     NSColor* color = ColorForAppearance(
-        self.highlighted ? FnoxHeadingColor() : FnoxButtonTitleColor(),
-        self.effectiveAppearance);
+        self.highlighted ? FnoxHeadingColor() : FnoxButtonTitleColor(), self.effectiveAppearance);
     NSMutableAttributedString* title = [self.attributedTitle mutableCopy];
-    [title addAttribute:NSForegroundColorAttributeName value:color
-                 range:NSMakeRange(0, title.length)];
+    [title addAttribute:NSForegroundColorAttributeName
+                  value:color
+                  range:NSMakeRange(0, title.length)];
     if (![self.attributedTitle isEqualToAttributedString:title]) {
       self.attributedTitle = title;
     }
@@ -208,18 +185,18 @@ void DrawFnoxFocusRing(NSView* view) {
   [fnox::ApprovalButtonBodyPath(self.bounds) addClip];
   if (self.bordered) {
     NSColor* fill = self.response == NSAlertFirstButtonReturn
-        ? fnox::ApprovalCancelFill(self.effectiveAppearance)
-        : fnox::ApprovalRestingFill(self.effectiveAppearance);
+                        ? fnox::ApprovalCancelFill(self.effectiveAppearance)
+                        : fnox::ApprovalRestingFill(self.effectiveAppearance);
     [fill setFill];
     [fnox::ApprovalButtonBodyPath(self.bounds) fill];
     if (self.response == NSAlertFirstButtonReturn) {
-      NSColor* titleColor = fnox::ApprovalCancelTitleColor(
-          self.effectiveAppearance);
+      NSColor* titleColor = fnox::ApprovalCancelTitleColor(self.effectiveAppearance);
       if (self.highlighted) {
         titleColor = fnox::ThemeColor(fnox::kThemePressed, self.effectiveAppearance);
       }
       NSMutableAttributedString* title = [self.attributedTitle mutableCopy];
-      [title addAttribute:NSForegroundColorAttributeName value:titleColor
+      [title addAttribute:NSForegroundColorAttributeName
+                    value:titleColor
                     range:NSMakeRange(0, title.length)];
       self.attributedTitle = title;
       self.contentTintColor = titleColor;
@@ -295,20 +272,23 @@ void DrawFnoxFocusRing(NSView* view) {
 }
 - (void)setCopied:(BOOL)copied {
   NSString* title = copied ? @"\u2009Copied" : [@"\u2009" stringByAppendingString:self.detailName];
-  self.attributedTitle = [[NSAttributedString alloc] initWithString:title attributes:@{
-      NSFontAttributeName: self.font,
-      NSForegroundColorAttributeName: FnoxButtonTitleColor(),
-  }];
+  self.attributedTitle =
+      [[NSAttributedString alloc] initWithString:title
+                                      attributes:@{
+                                        NSFontAttributeName : self.font,
+                                        NSForegroundColorAttributeName : FnoxButtonTitleColor(),
+                                      }];
   const unsigned char* bytes = copied ? kDetailCheckIconSvg : kDetailCopyIconSvg;
   const NSUInteger length = copied ? sizeof(kDetailCheckIconSvg) : sizeof(kDetailCopyIconSvg);
   NSImage* icon = [[NSImage alloc] initWithData:[NSData dataWithBytes:bytes length:length]];
-  self.image = [NSImage imageWithSize:icon.size flipped:NO
-      drawingHandler:^BOOL(NSRect bounds) {
-    [icon drawInRect:bounds];
-    [FnoxCopyIconColor() setFill];
-    NSRectFillUsingOperation(bounds, NSCompositingOperationSourceIn);
-    return YES;
-  }];
+  self.image = [NSImage imageWithSize:icon.size
+                              flipped:NO
+                       drawingHandler:^BOOL(NSRect bounds) {
+                         [icon drawInRect:bounds];
+                         [FnoxCopyIconColor() setFill];
+                         NSRectFillUsingOperation(bounds, NSCompositingOperationSourceIn);
+                         return YES;
+                       }];
   self.contentTintColor = FnoxCopyIconColor();
   self.toolTip = copied ? [@"Copied " stringByAppendingString:self.detailName]
                         : [@"Copy " stringByAppendingString:self.detailName];
@@ -325,11 +305,13 @@ void DrawFnoxFocusRing(NSView* view) {
   [self.resetTimer invalidate];
   [self setCopied:YES];
   __weak FnoxDetailCopyButton* weakSelf = self;
-  self.resetTimer = [NSTimer timerWithTimeInterval:1.2 repeats:NO block:^(NSTimer* timer) {
-    (void)timer;
-    [weakSelf setCopied:NO];
-    weakSelf.resetTimer = nil;
-  }];
+  self.resetTimer = [NSTimer timerWithTimeInterval:1.2
+                                           repeats:NO
+                                             block:^(NSTimer* timer) {
+                                               (void)timer;
+                                               [weakSelf setCopied:NO];
+                                               weakSelf.resetTimer = nil;
+                                             }];
   [[NSRunLoop mainRunLoop] addTimer:self.resetTimer forMode:NSRunLoopCommonModes];
 }
 @end
@@ -352,7 +334,9 @@ void DrawFnoxFocusRing(NSView* view) {
 @end
 
 @implementation FnoxDetailRowsView
-- (BOOL)isFlipped { return YES; }
+- (BOOL)isFlipped {
+  return YES;
+}
 @end
 
 @implementation FnoxTextShimmer
@@ -369,8 +353,7 @@ void DrawFnoxFocusRing(NSView* view) {
 - (void)setBaseColor:(NSColor*)baseColor highlightColor:(NSColor*)highlightColor {
   self.baseColor = baseColor;
   self.highlightColor = highlightColor;
-  self.label.textColor = ColorForAppearance(baseColor,
-                                             AppearanceForView(self.label));
+  self.label.textColor = ColorForAppearance(baseColor, AppearanceForView(self.label));
   if (self.timer != nil) [self update];
 }
 - (void)setHighlightsVisible:(BOOL)visible {
@@ -393,11 +376,12 @@ void DrawFnoxFocusRing(NSView* view) {
   // an existing shimmer refreshes its current frame instead of restarting it.
   self.startTime = CACurrentMediaTime();
   __weak FnoxTextShimmer* weakSelf = self;
-  self.timer = [NSTimer timerWithTimeInterval:1.0 / 30.0 repeats:YES
-      block:^(NSTimer* timer) {
-        (void)timer;
-        [weakSelf update];
-      }];
+  self.timer = [NSTimer timerWithTimeInterval:1.0 / 30.0
+                                      repeats:YES
+                                        block:^(NSTimer* timer) {
+                                          (void)timer;
+                                          [weakSelf update];
+                                        }];
   [[NSRunLoop mainRunLoop] addTimer:self.timer forMode:NSRunLoopCommonModes];
   [self update];
 }
@@ -409,17 +393,16 @@ void DrawFnoxFocusRing(NSView* view) {
   NSAppearance* appearance = AppearanceForView(self.label);
   NSColor* baseColor = ColorForAppearance(self.baseColor, appearance);
   NSColor* highlightColor = ColorForAppearance(self.highlightColor, appearance);
-  const BOOL dark = [[appearance bestMatchFromAppearancesWithNames:@[
-      NSAppearanceNameAqua, NSAppearanceNameDarkAqua]]
+  const BOOL dark = [[appearance
+      bestMatchFromAppearancesWithNames:@[ NSAppearanceNameAqua, NSAppearanceNameDarkAqua ]]
       isEqualToString:NSAppearanceNameDarkAqua];
   if (!self.highlightsVisible) {
     self.label.textColor = baseColor;
     self.label.stringValue = value;
     return;
   }
-  const CFTimeInterval phase = elapsed < kTextShimmerLeadIn
-      ? -1
-      : fmod(elapsed - kTextShimmerLeadIn, kTextShimmerCycle);
+  const CFTimeInterval phase =
+      elapsed < kTextShimmerLeadIn ? -1 : fmod(elapsed - kTextShimmerLeadIn, kTextShimmerCycle);
   if (phase < 0 || phase >= kTextShimmerSweep) {
     self.label.textColor = baseColor;
     self.label.stringValue = value;
@@ -427,55 +410,49 @@ void DrawFnoxFocusRing(NSView* view) {
   }
   const CGFloat halfWidth = MAX(static_cast<CGFloat>(value.length) * 0.1, 3);
   const CGFloat progress = static_cast<CGFloat>(phase / kTextShimmerSweep);
-  const CGFloat center = progress *
-      (static_cast<CGFloat>(value.length) + 2 * halfWidth) - halfWidth;
-  NSMutableAttributedString* text = [[NSMutableAttributedString alloc]
-      initWithString:value attributes:@{NSFontAttributeName: self.label.font}];
+  const CGFloat center =
+      progress * (static_cast<CGFloat>(value.length) + 2 * halfWidth) - halfWidth;
+  NSMutableAttributedString* text =
+      [[NSMutableAttributedString alloc] initWithString:value
+                                             attributes:@{NSFontAttributeName : self.label.font}];
   NSUInteger offset = 0;
   while (offset < value.length) {
     const NSRange range = [value rangeOfComposedCharacterSequenceAtIndex:offset];
     const CGFloat distance = fabs(static_cast<CGFloat>(offset) - center);
     const CGFloat ratio = MIN(distance / halfWidth, 1);
-    const CGFloat intensity = (dark ? 0.45 : 1.0) * 0.5 *
-        (1 + std::cos(3.14159265358979323846 * ratio));
-    NSColor* color = [baseColor blendedColorWithFraction:intensity
-                                                  ofColor:highlightColor];
+    const CGFloat intensity =
+        (dark ? 0.45 : 1.0) * 0.5 * (1 + std::cos(3.14159265358979323846 * ratio));
+    NSColor* color = [baseColor blendedColorWithFraction:intensity ofColor:highlightColor];
     [text addAttribute:NSForegroundColorAttributeName value:color range:range];
     offset = NSMaxRange(range);
   }
   NSMutableParagraphStyle* paragraph = [NSMutableParagraphStyle new];
   paragraph.alignment = self.label.alignment;
-  [text addAttribute:NSParagraphStyleAttributeName value:paragraph
+  [text addAttribute:NSParagraphStyleAttributeName
+               value:paragraph
                range:NSMakeRange(0, text.length)];
   self.label.attributedStringValue = text;
 }
 @end
 
-
-
 namespace fnox {
 namespace {
 
+NSView* ApprovalContent(NSPanel* panel) { return ((FnoxApprovalPanel*)panel).approvalContent; }
 
-NSView* ApprovalContent(NSPanel* panel) {
-  return ((FnoxApprovalPanel*)panel).approvalContent;
-}
-
-void InstallApprovalGlass(FnoxApprovalPanel* panel, CGFloat width,
-                          CGFloat height) {
+void InstallApprovalGlass(FnoxApprovalPanel* panel, CGFloat width, CGFloat height) {
   panel.approvalContent = panel.contentView;
   if (@available(macOS 26.0, *)) {
     panel.styleMask |= NSWindowStyleMaskFullSizeContentView;
     panel.opaque = NO;
     panel.backgroundColor = NSColor.clearColor;
-    FnoxApprovalGlassView* glass = [[FnoxApprovalGlassView alloc]
-        initWithFrame:panel.contentView.bounds];
+    FnoxApprovalGlassView* glass =
+        [[FnoxApprovalGlassView alloc] initWithFrame:panel.contentView.bounds];
     glass.style = NSGlassEffectViewStyleRegular;
     glass.cornerRadius = 16;
     glass.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
     NSView* container = [[NSView alloc] initWithFrame:glass.bounds];
-    NSView* content = [[NSView alloc]
-        initWithFrame:NSMakeRect(0, 0, width, height)];
+    NSView* content = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, width, height)];
     content.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
     [container addSubview:content];
     glass.contentView = container;
@@ -495,8 +472,7 @@ void SetApprovalGlassTransition(NSPanel* panel, BOOL transitioning) {
     FnoxApprovalGlassView* glass = (FnoxApprovalGlassView*)panel.contentView;
     CALayer* surface = glass.contentView.layer;
     CALayer* visibleSurface = surface.presentationLayer;
-    CGColorRef currentColor =
-        (visibleSurface != nil ? visibleSurface : surface).backgroundColor;
+    CGColorRef currentColor = (visibleSurface != nil ? visibleSurface : surface).backgroundColor;
     CABasicAnimation* fade = [CABasicAnimation animationWithKeyPath:@"backgroundColor"];
     fade.fromValue = (__bridge id)currentColor;
     [CATransaction begin];
@@ -507,8 +483,8 @@ void SetApprovalGlassTransition(NSPanel* panel, BOOL transitioning) {
     if (!reduceEffects) {
       fade.toValue = (__bridge id)surface.backgroundColor;
       fade.duration = 0.45;
-      fade.timingFunction = [CAMediaTimingFunction
-          functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
+      fade.timingFunction =
+          [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
       [surface addAnimation:fade forKey:@"approvalGlassFade"];
     }
   }
@@ -516,7 +492,9 @@ void SetApprovalGlassTransition(NSPanel* panel, BOOL transitioning) {
 
 NSPanel* RequestPanel(CGFloat width, CGFloat height, NSString* title) {
   NSPanel* panel = [[FnoxApprovalPanel alloc] initWithContentRect:NSMakeRect(0, 0, width, height)
-      styleMask:NSWindowStyleMaskTitled backing:NSBackingStoreBuffered defer:NO];
+                                                        styleMask:NSWindowStyleMaskTitled
+                                                          backing:NSBackingStoreBuffered
+                                                            defer:NO];
   panel.titleVisibility = NSWindowTitleHidden;
   panel.titlebarAppearsTransparent = YES;
   panel.movableByWindowBackground = YES;
@@ -545,7 +523,7 @@ NSTextField* PanelHeading(NSPanel* panel) {
 }
 
 FnoxPanelButton* PanelButton(NSPanel* panel, NSString* title, NSRect frame,
-                                NSModalResponse response) {
+                             NSModalResponse response) {
   FnoxPanelButton* button = [[FnoxPanelButton alloc] initWithFrame:frame];
   button.title = title;
   button.bezelStyle = NSBezelStyleRounded;
@@ -562,26 +540,30 @@ void StyleBrandButtonTitle(NSButton* button, NSString* title) {
   button.bordered = NO;
   ((NSButtonCell*)button.cell).highlightsBy = NSNoCellMask;
   button.contentTintColor = FnoxButtonTitleColor();
-  button.attributedTitle = [[NSAttributedString alloc] initWithString:title
-      attributes:@{NSFontAttributeName: font,
-                   NSForegroundColorAttributeName: FnoxButtonTitleColor()}];
+  button.attributedTitle =
+      [[NSAttributedString alloc] initWithString:title
+                                      attributes:@{
+                                        NSFontAttributeName : font,
+                                        NSForegroundColorAttributeName : FnoxButtonTitleColor()
+                                      }];
 }
 
-void StyleApprovalHeading(NSTextField* heading, NSString* title,
-                          NSString* credentials) {
+void StyleApprovalHeading(NSTextField* heading, NSString* title, NSString* credentials) {
   NSMutableAttributedString* text = [[NSMutableAttributedString alloc]
       initWithString:title
-          attributes:@{NSFontAttributeName: [NSFont boldSystemFontOfSize:14],
-                       NSForegroundColorAttributeName: FnoxHeadingColor()}];
+          attributes:@{
+            NSFontAttributeName : [NSFont boldSystemFontOfSize:14],
+            NSForegroundColorAttributeName : FnoxHeadingColor()
+          }];
   NSMutableParagraphStyle* paragraph = [NSMutableParagraphStyle new];
   paragraph.alignment = NSTextAlignmentCenter;
-  [text addAttribute:NSParagraphStyleAttributeName value:paragraph
+  [text addAttribute:NSParagraphStyleAttributeName
+               value:paragraph
                range:NSMakeRange(0, text.length)];
   const NSRange delimiter = [title rangeOfString:@" to use "];
   if (delimiter.location != NSNotFound) {
     NSUInteger offset = NSMaxRange(delimiter);
-    NSFont* credentialFont =
-        [NSFont monospacedSystemFontOfSize:13 weight:NSFontWeightSemibold];
+    NSFont* credentialFont = [NSFont monospacedSystemFontOfSize:13 weight:NSFontWeightSemibold];
     for (NSString* name in [credentials componentsSeparatedByString:@", "]) {
       if (name.length == 0 || offset >= title.length) continue;
       const NSRange range = [title rangeOfString:name
@@ -632,28 +614,24 @@ void InvalidateCursorRects(NSArray<NSView*>* views) {
   }
 }
 
-void AnimatePanelFrame(NSPanel* panel, NSRect start, NSRect target,
-                       BOOL reduceMotion, NSArray<NSView*>* trackingViews,
-                       NSArray<NSValue*>* trackingFrames,
-                       NSSize trackingContentSize,
-                       NSView* authenticationHost,
-                       NSView* nativeAuthenticationView, NSView* shieldView,
-                       NSRect hostStartFrame, NSRect hostTargetFrame,
-                       void (^completion)(void)) {
+void AnimatePanelFrame(NSPanel* panel, NSRect start, NSRect target, BOOL reduceMotion,
+                       NSArray<NSView*>* trackingViews, NSArray<NSValue*>* trackingFrames,
+                       NSSize trackingContentSize, NSView* authenticationHost,
+                       NSView* nativeAuthenticationView, NSView* shieldView, NSRect hostStartFrame,
+                       NSRect hostTargetFrame, void (^completion)(void)) {
   const CGFloat contentHeightDelta = target.size.height - start.size.height;
   const CGFloat hostYDelta = hostTargetFrame.origin.y - hostStartFrame.origin.y;
   const CGFloat contentHeightRange = contentHeightDelta;
   void (^layoutAuthenticationHost)(void) = ^{
     const NSSize contentSize = ApprovalContent(panel).bounds.size;
-    const CGFloat rawProgress = contentHeightRange == 0
-        ? 1
-        : (contentSize.height - trackingContentSize.height) /
-              contentHeightRange;
+    const CGFloat rawProgress =
+        contentHeightRange == 0
+            ? 1
+            : (contentSize.height - trackingContentSize.height) / contentHeightRange;
     const CGFloat progress = MAX(0, MIN(1, rawProgress));
     const CGFloat hostY = hostStartFrame.origin.y + hostYDelta * progress;
     const NSRect hostFrame = AuthenticationHostFrame(contentSize, hostY);
-    LayoutAuthenticationHost(authenticationHost, nativeAuthenticationView,
-                             shieldView, hostFrame);
+    LayoutAuthenticationHost(authenticationHost, nativeAuthenticationView, shieldView, hostFrame);
   };
   if (reduceMotion) {
     [panel setFrame:target display:YES];
@@ -673,69 +651,68 @@ void AnimatePanelFrame(NSPanel* panel, NSRect start, NSRect target,
   const CGFloat centerX = NSMidX(start);
   const CGFloat centerY = NSMidY(start);
   const CFTimeInterval animationStart = CACurrentMediaTime();
-  NSTimer* timer = [NSTimer timerWithTimeInterval:1.0 / 60.0 repeats:YES
-      block:^(NSTimer* currentTimer) {
-        const NSTimeInterval elapsed = CACurrentMediaTime() - animationStart;
-        if (elapsed >= snapDuration + settleDuration) {
-          [panel setFrame:target display:YES];
-          layoutAuthenticationHost();
-          [currentTimer invalidate];
-          InvalidateCursorRects(trackingViews);
-          completion();
-          return;
-        }
-        CGFloat width = target.size.width;
-        CGFloat height = target.size.height;
-        if (elapsed < snapDuration) {
-          const CGFloat progress = elapsed / snapDuration;
-          const CGFloat eased = 1 - std::pow(1 - progress, 3);
-          width = start.size.width + widthDelta * eased;
-          height = start.size.height + heightDelta * eased;
-        } else {
-          const CGFloat progress = (elapsed - snapDuration) / settleDuration;
-          const CGFloat displacement = PanelSpringDisplacement(progress);
-          width += widthDirection * overshoot * displacement;
-          height += heightDirection * overshoot * displacement;
-        }
-        const NSRect frame = NSMakeRect(centerX - width / 2,
-                                       centerY - height / 2,
-                                        width, height);
-        [panel setFrame:frame display:YES];
-        layoutAuthenticationHost();
-        const CGFloat xOffset =
-            (ApprovalContent(panel).bounds.size.width - trackingContentSize.width) / 2;
-        const CGFloat yOffset =
-            (ApprovalContent(panel).bounds.size.height - trackingContentSize.height) / 2;
-        for (NSUInteger index = 0; index < trackingViews.count; ++index) {
-          NSRect viewFrame = trackingFrames[index].rectValue;
-          viewFrame.origin.x += xOffset;
-          viewFrame.origin.y += yOffset;
-          trackingViews[index].frame = viewFrame;
-        }
-      }];
+  NSTimer* timer = [NSTimer
+      timerWithTimeInterval:1.0 / 60.0
+                    repeats:YES
+                      block:^(NSTimer* currentTimer) {
+                        const NSTimeInterval elapsed = CACurrentMediaTime() - animationStart;
+                        if (elapsed >= snapDuration + settleDuration) {
+                          [panel setFrame:target display:YES];
+                          layoutAuthenticationHost();
+                          [currentTimer invalidate];
+                          InvalidateCursorRects(trackingViews);
+                          completion();
+                          return;
+                        }
+                        CGFloat width = target.size.width;
+                        CGFloat height = target.size.height;
+                        if (elapsed < snapDuration) {
+                          const CGFloat progress = elapsed / snapDuration;
+                          const CGFloat eased = 1 - std::pow(1 - progress, 3);
+                          width = start.size.width + widthDelta * eased;
+                          height = start.size.height + heightDelta * eased;
+                        } else {
+                          const CGFloat progress = (elapsed - snapDuration) / settleDuration;
+                          const CGFloat displacement = PanelSpringDisplacement(progress);
+                          width += widthDirection * overshoot * displacement;
+                          height += heightDirection * overshoot * displacement;
+                        }
+                        const NSRect frame =
+                            NSMakeRect(centerX - width / 2, centerY - height / 2, width, height);
+                        [panel setFrame:frame display:YES];
+                        layoutAuthenticationHost();
+                        const CGFloat xOffset =
+                            (ApprovalContent(panel).bounds.size.width - trackingContentSize.width) /
+                            2;
+                        const CGFloat yOffset = (ApprovalContent(panel).bounds.size.height -
+                                                 trackingContentSize.height) /
+                                                2;
+                        for (NSUInteger index = 0; index < trackingViews.count; ++index) {
+                          NSRect viewFrame = trackingFrames[index].rectValue;
+                          viewFrame.origin.x += xOffset;
+                          viewFrame.origin.y += yOffset;
+                          trackingViews[index].frame = viewFrame;
+                        }
+                      }];
   [[NSRunLoop mainRunLoop] addTimer:timer forMode:NSRunLoopCommonModes];
 }
 
 void AnimateViewsAndFingerprint(NSArray<NSView*>* views, CGFloat alpha,
-                               FnoxFingerprintView* fingerprint,
-                               NSRect fingerprintFrame,
-                               NSTimeInterval duration, BOOL reduceMotion,
-                               void (^completion)(void),
-                               NSArray<NSView*>* movingViews = nil,
-                               NSArray<NSValue*>* movingFrames = nil,
-                               NSTimeInterval movingDuration = 0) {
+                                FnoxFingerprintView* fingerprint, NSRect fingerprintFrame,
+                                NSTimeInterval duration, BOOL reduceMotion,
+                                void (^completion)(void), NSArray<NSView*>* movingViews = nil,
+                                NSArray<NSValue*>* movingFrames = nil,
+                                NSTimeInterval movingDuration = 0) {
   NSMutableArray<NSNumber*>* startingAlphas = [NSMutableArray arrayWithCapacity:views.count];
   for (NSView* view in views) {
     [startingAlphas addObject:@(view.alphaValue)];
   }
-  NSMutableArray<NSValue*>* startingFrames =
-      [NSMutableArray arrayWithCapacity:movingViews.count];
+  NSMutableArray<NSValue*>* startingFrames = [NSMutableArray arrayWithCapacity:movingViews.count];
   for (NSView* view in movingViews) {
     [startingFrames addObject:[NSValue valueWithRect:view.frame]];
   }
   const NSRect startingFrame = fingerprint.frame;
-  const NSTimeInterval effectiveMovingDuration =
-      movingDuration > 0 ? movingDuration : duration;
+  const NSTimeInterval effectiveMovingDuration = movingDuration > 0 ? movingDuration : duration;
   if (reduceMotion || duration <= 0) {
     for (NSView* view in views) view.alphaValue = alpha;
     for (NSUInteger index = 0; index < movingViews.count; ++index) {
@@ -747,61 +724,62 @@ void AnimateViewsAndFingerprint(NSArray<NSView*>* views, CGFloat alpha,
     return;
   }
   const CFTimeInterval animationStart = CACurrentMediaTime();
-  NSTimer* timer = [NSTimer timerWithTimeInterval:1.0 / 60.0 repeats:YES
-      block:^(NSTimer* currentTimer) {
-        const NSTimeInterval elapsed = CACurrentMediaTime() - animationStart;
-        const CGFloat progress = static_cast<CGFloat>(MIN(1, elapsed / duration));
-        const CGFloat eased = (1 - std::cos(3.141592653589793 * progress)) / 2;
-        const CGFloat viewProgress = static_cast<CGFloat>(
-            MIN(1, elapsed / effectiveMovingDuration));
-        const CGFloat viewEased =
-            (1 - std::cos(3.141592653589793 * viewProgress)) / 2;
-        if (elapsed >= duration) {
-          for (NSView* view in views) view.alphaValue = alpha;
-          for (NSUInteger index = 0; index < movingViews.count; ++index) {
-            movingViews[index].frame = movingFrames[index].rectValue;
-          }
-          fingerprint.frame = fingerprintFrame;
-          [currentTimer invalidate];
-          InvalidateCursorRects(movingViews);
-          completion();
-          return;
-        }
-        for (NSUInteger index = 0; index < views.count; ++index) {
-          const CGFloat startAlpha = startingAlphas[index].doubleValue;
-          const BOOL movesWithPanel = [movingViews containsObject:views[index]];
-          const NSTimeInterval alphaDuration =
-              movesWithPanel ? effectiveMovingDuration : MIN(duration, 0.09);
-          const CGFloat alphaProgress =
-              static_cast<CGFloat>(MIN(1, elapsed / alphaDuration));
-          const CGFloat alphaEased =
-              (1 - std::cos(3.141592653589793 * alphaProgress)) / 2;
-          views[index].alphaValue =
-              startAlpha + (alpha - startAlpha) * alphaEased;
-        }
-        for (NSUInteger index = 0; index < movingViews.count; ++index) {
-          const NSRect startFrame = startingFrames[index].rectValue;
-          const NSRect targetFrame = movingFrames[index].rectValue;
-          movingViews[index].frame = NSMakeRect(
-              startFrame.origin.x +
-                  (targetFrame.origin.x - startFrame.origin.x) * viewEased,
-              startFrame.origin.y +
-                  (targetFrame.origin.y - startFrame.origin.y) * viewEased,
-              startFrame.size.width +
-                  (targetFrame.size.width - startFrame.size.width) * viewEased,
-              startFrame.size.height +
-                  (targetFrame.size.height - startFrame.size.height) * viewEased);
-        }
-        fingerprint.frame = NSMakeRect(
-            startingFrame.origin.x +
-                (fingerprintFrame.origin.x - startingFrame.origin.x) * eased,
-            startingFrame.origin.y +
-                (fingerprintFrame.origin.y - startingFrame.origin.y) * eased,
-            startingFrame.size.width +
-                (fingerprintFrame.size.width - startingFrame.size.width) * eased,
-            startingFrame.size.height +
-                (fingerprintFrame.size.height - startingFrame.size.height) * eased);
-      }];
+  NSTimer* timer = [NSTimer
+      timerWithTimeInterval:1.0 / 60.0
+                    repeats:YES
+                      block:^(NSTimer* currentTimer) {
+                        const NSTimeInterval elapsed = CACurrentMediaTime() - animationStart;
+                        const CGFloat progress = static_cast<CGFloat>(MIN(1, elapsed / duration));
+                        const CGFloat eased = (1 - std::cos(3.141592653589793 * progress)) / 2;
+                        const CGFloat viewProgress =
+                            static_cast<CGFloat>(MIN(1, elapsed / effectiveMovingDuration));
+                        const CGFloat viewEased =
+                            (1 - std::cos(3.141592653589793 * viewProgress)) / 2;
+                        if (elapsed >= duration) {
+                          for (NSView* view in views) view.alphaValue = alpha;
+                          for (NSUInteger index = 0; index < movingViews.count; ++index) {
+                            movingViews[index].frame = movingFrames[index].rectValue;
+                          }
+                          fingerprint.frame = fingerprintFrame;
+                          [currentTimer invalidate];
+                          InvalidateCursorRects(movingViews);
+                          completion();
+                          return;
+                        }
+                        for (NSUInteger index = 0; index < views.count; ++index) {
+                          const CGFloat startAlpha = startingAlphas[index].doubleValue;
+                          const BOOL movesWithPanel = [movingViews containsObject:views[index]];
+                          const NSTimeInterval alphaDuration =
+                              movesWithPanel ? effectiveMovingDuration : MIN(duration, 0.09);
+                          const CGFloat alphaProgress =
+                              static_cast<CGFloat>(MIN(1, elapsed / alphaDuration));
+                          const CGFloat alphaEased =
+                              (1 - std::cos(3.141592653589793 * alphaProgress)) / 2;
+                          views[index].alphaValue = startAlpha + (alpha - startAlpha) * alphaEased;
+                        }
+                        for (NSUInteger index = 0; index < movingViews.count; ++index) {
+                          const NSRect startFrame = startingFrames[index].rectValue;
+                          const NSRect targetFrame = movingFrames[index].rectValue;
+                          movingViews[index].frame = NSMakeRect(
+                              startFrame.origin.x +
+                                  (targetFrame.origin.x - startFrame.origin.x) * viewEased,
+                              startFrame.origin.y +
+                                  (targetFrame.origin.y - startFrame.origin.y) * viewEased,
+                              startFrame.size.width +
+                                  (targetFrame.size.width - startFrame.size.width) * viewEased,
+                              startFrame.size.height +
+                                  (targetFrame.size.height - startFrame.size.height) * viewEased);
+                        }
+                        fingerprint.frame = NSMakeRect(
+                            startingFrame.origin.x +
+                                (fingerprintFrame.origin.x - startingFrame.origin.x) * eased,
+                            startingFrame.origin.y +
+                                (fingerprintFrame.origin.y - startingFrame.origin.y) * eased,
+                            startingFrame.size.width +
+                                (fingerprintFrame.size.width - startingFrame.size.width) * eased,
+                            startingFrame.size.height +
+                                (fingerprintFrame.size.height - startingFrame.size.height) * eased);
+                      }];
   [[NSRunLoop mainRunLoop] addTimer:timer forMode:NSRunLoopCommonModes];
 }
 
@@ -809,17 +787,6 @@ NSString* MakeString(std::string_view value) {
   return [[NSString alloc] initWithBytes:value.data()
                                   length:value.size()
                                 encoding:NSUTF8StringEncoding];
-}
-
-NSString* VisibleString(std::string_view value, NSString** copy_value) {
-  NSString* original = MakeString(value);
-  if (original != nil) {
-    *copy_value = original;
-    return MakeString(VisibleArgument(value));
-  }
-  NSString* escaped_value = MakeString(VisibleArgument(value));
-  *copy_value = escaped_value;
-  return escaped_value;
 }
 
 NSString* CredentialSummary(const RunOptions& options) {
@@ -833,115 +800,31 @@ NSString* CredentialSummary(const RunOptions& options) {
   return [names componentsJoinedByString:@", "];
 }
 
-NSString* EscapeJsonNonAscii(NSString* json) {
-  NSMutableString* escaped = [NSMutableString stringWithCapacity:json.length];
-  for (NSUInteger index = 0; index < json.length; ++index) {
-    const unichar character = [json characterAtIndex:index];
-    if (character > 0x7f) {
-      [escaped appendFormat:@"\\u%04x", character];
-    } else {
-      [escaped appendFormat:@"%C", character];
-    }
-  }
-  return escaped;
-}
-
-NSString* DetailArray(const std::vector<std::string>& values,
-                      NSString** copy_value, BOOL* used_fallback) {
-  NSMutableArray<NSString*>* items = [NSMutableArray array];
-  for (const std::string& value : values) {
-    NSString* item = MakeString(value);
-    if (item == nil) {
-      *used_fallback = YES;
-      item = MakeString(VisibleArgument(value));
-    }
-    [items addObject:item];
-  }
-  NSData* json = [NSJSONSerialization dataWithJSONObject:items options:0 error:nil];
-  NSString* encoded = [[NSString alloc] initWithData:json encoding:NSUTF8StringEncoding];
-  *copy_value = encoded;
-  return EscapeJsonNonAscii(encoded);
-}
-
-NSArray<NSArray<NSString*>*>* RequestDetailRows(
-    const RunOptions& options, std::string_view request_id,
-    NSString* operation) {
-#ifdef FNOX_TOUCH_PREVIEW
+NSArray<NSArray<NSString*>*>* RequestDetailRows(const RunOptions& options,
+                                                std::string_view request_id, NSString* operation) {
   (void)options;
   (void)request_id;
   (void)operation;
   return @[
-    @[@"Fnox request", @"Sample credential proxy request · preview only", @"Sample credential proxy request · preview only"],
-    @[@"Action", @"Start credential proxy", @"Start credential proxy"],
-    @[@"Command", @"claude", @"claude"],
-    @[@"Project", @"/Users/jdalton/projects/keel", @"/Users/jdalton/projects/keel"],
-    @[@"Secret", @"GITHUB_TOKEN", @"GITHUB_TOKEN"],
-    @[@"Credential source", @"1Password · op", @"1Password · op"],
-    @[@"Destination", @"api.github.com", @"api.github.com"],
-    @[@"Allowed requests", @"GET /repos/jdalton/keel/**", @"GET /repos/jdalton/keel/**"],
-    @[@"Credential delivery", @"Authorization header · proxy only", @"Authorization header · proxy only"],
-    @[@"Approval", @"Touch ID · Shift + Return in preview", @"Touch ID · Shift + Return in preview"],
+    @[
+      @"Fnox request", @"Sample credential proxy request · preview only",
+      @"Sample credential proxy request · preview only"
+    ],
+    @[ @"Action", @"Start credential proxy", @"Start credential proxy" ],
+    @[ @"Command", @"claude", @"claude" ],
+    @[ @"Project", @"/Users/jdalton/projects/keel", @"/Users/jdalton/projects/keel" ],
+    @[ @"Secret", @"GITHUB_TOKEN", @"GITHUB_TOKEN" ],
+    @[ @"Credential source", @"1Password · op", @"1Password · op" ],
+    @[ @"Destination", @"api.github.com", @"api.github.com" ],
+    @[ @"Allowed requests", @"GET /repos/jdalton/keel/**", @"GET /repos/jdalton/keel/**" ],
+    @[
+      @"Credential delivery", @"Authorization header · proxy only",
+      @"Authorization header · proxy only"
+    ],
+    @[
+      @"Approval", @"Touch ID · Shift + Return in preview", @"Touch ID · Shift + Return in preview"
+    ],
   ];
-#else
-  NSMutableArray<NSArray<NSString*>*>* rows = [NSMutableArray array];
-  if (options.executable.canonical_path.empty() && operation.length > 0) {
-    [rows addObject:@[@"operation", operation, operation, @""]];
-  }
-  NSString* copy_value = nil;
-  NSString* request_value = MakeString(request_id);
-  NSString* full_request = [@"sha256:" stringByAppendingString:
-      request_value != nil ? request_value : @""];
-  [rows addObject:@[@"requestId", full_request, full_request]];
-  if (!options.working_directory.canonical_path.empty()) {
-    NSString* cwd = VisibleString(options.working_directory.canonical_path, &copy_value);
-    NSString* cwd_help = MakeString(options.working_directory.canonical_path) == nil
-        ? @"Invalid UTF-8 bytes are shown as escaped bytes." : @"";
-    [rows addObject:@[@"cwd", cwd, copy_value, cwd_help]];
-  }
-  if (!options.executable.canonical_path.empty()) {
-    NSString* executable = VisibleString(options.executable.canonical_path, &copy_value);
-    NSString* executable_help = MakeString(options.executable.canonical_path) == nil
-        ? @"Invalid UTF-8 bytes are shown as escaped bytes." : @"";
-    [rows addObject:@[@"executable.path", executable, copy_value, executable_help]];
-    NSString* executable_digest = MakeString(DigestHex(options.executable));
-    [rows addObject:@[@"executable.sha256", executable_digest, executable_digest, @""]];
-  }
-  for (std::size_t index = 0; index < options.bound_files.size(); ++index) {
-    const FileIdentity& file = options.bound_files[index];
-    NSString* label = [NSString stringWithFormat:@"file[%zu]", index];
-    NSString* path = VisibleString(file.canonical_path, &copy_value);
-    NSString* path_help = MakeString(file.canonical_path) == nil
-        ? @"Invalid UTF-8 bytes are shown as escaped bytes." : @"";
-    [rows addObject:@[label, path, copy_value, path_help]];
-    NSString* digest = MakeString(DigestHex(file));
-    [rows addObject:@[[label stringByAppendingString:@".sha256"],
-                     digest, digest, @""]];
-  }
-  for (std::size_t index = 0; index < options.credentials.size(); ++index) {
-    const CredentialRequest& credential = options.credentials[index];
-    NSString* suffix = options.credentials.size() == 1
-        ? @"" : [NSString stringWithFormat:@"[%zu]", index];
-    [rows addObject:@[[@"credential" stringByAppendingString:suffix],
-                     MakeString(credential.identifier), MakeString(credential.identifier), @""]];
-    [rows addObject:@[[@"binding" stringByAppendingString:suffix],
-                     MakeString(credential.binding_id), MakeString(credential.binding_id), @""]];
-  }
-  BOOL used_fallback = NO;
-  if (!options.passed_environment.empty()) {
-    NSString* environments =
-        DetailArray(options.passed_environment, &copy_value, &used_fallback);
-    [rows addObject:@[@"envNames", environments, copy_value,
-        used_fallback ? @"Invalid UTF-8 entries are shown as escaped bytes." : @""]];
-  }
-  if (!options.child_arguments.empty()) {
-    used_fallback = NO;
-    NSString* arguments =
-        DetailArray(options.child_arguments, &copy_value, &used_fallback);
-    [rows addObject:@[@"arguments", arguments, copy_value,
-        used_fallback ? @"Invalid UTF-8 entries are shown as escaped bytes." : @""]];
-  }
-  return rows;
-#endif
 }
 
 NSScrollView* DetailRowsView(NSArray<NSArray<NSString*>*>* rows) {
@@ -950,12 +833,11 @@ NSScrollView* DetailRowsView(NSArray<NSArray<NSString*>*>* rows) {
   const CGFloat buttonWidth = 168;
   const CGFloat valueWidth = width - 24 - buttonWidth - 12;
   NSFont* font = [NSFont monospacedSystemFontOfSize:12 weight:NSFontWeightRegular];
-  NSView* document = [[FnoxDetailRowsView alloc]
-      initWithFrame:NSMakeRect(0, 0, width - 24, 0)];
+  NSView* document = [[FnoxDetailRowsView alloc] initWithFrame:NSMakeRect(0, 0, width - 24, 0)];
   CGFloat top = 4;
   for (NSArray<NSString*>* row in rows) {
-    FnoxDetailCopyButton* button = [[FnoxDetailCopyButton alloc]
-        initWithFrame:NSMakeRect(0, top + 1, buttonWidth, 24)];
+    FnoxDetailCopyButton* button =
+        [[FnoxDetailCopyButton alloc] initWithFrame:NSMakeRect(0, top + 1, buttonWidth, 24)];
     button.title = [NSString stringWithFormat:@"\u2009%@", row[0]];
     button.imagePosition = NSImageLeft;
     button.imageHugsTitle = NO;
@@ -970,11 +852,10 @@ NSScrollView* DetailRowsView(NSArray<NSArray<NSString*>*>* rows) {
     button.action = @selector(copyDetail:);
     [document addSubview:button];
     NSString* shown = row[1];
-    const NSRect measured = [shown boundingRectWithSize:
-        NSMakeSize(valueWidth, CGFLOAT_MAX)
-        options:NSStringDrawingUsesLineFragmentOrigin |
-                NSStringDrawingUsesFontLeading
-        attributes:@{NSFontAttributeName: font}];
+    const NSRect measured = [shown
+        boundingRectWithSize:NSMakeSize(valueWidth, CGFLOAT_MAX)
+                     options:NSStringDrawingUsesLineFragmentOrigin | NSStringDrawingUsesFontLeading
+                  attributes:@{NSFontAttributeName : font}];
     const CGFloat estimated = MAX(30, ceil(NSHeight(measured) + 4));
     NSTextField* value = [NSTextField labelWithString:shown];
     value.frame = NSMakeRect(buttonWidth + 12, top, valueWidth, estimated);
@@ -988,7 +869,10 @@ NSScrollView* DetailRowsView(NSArray<NSArray<NSString*>*>* rows) {
     valueCell.wraps = YES;
     valueCell.scrollable = NO;
     value.accessibilityLabel = row[0];
-    if (row.count > 3 && row[3].length > 0) { value.toolTip = row[3]; value.accessibilityHelp = row[3]; }
+    if (row.count > 3 && row[3].length > 0) {
+      value.toolTip = row[3];
+      value.accessibilityHelp = row[3];
+    }
     [document addSubview:value];
     top += estimated + 7;
   }
@@ -1008,13 +892,11 @@ NSScrollView* DetailRowsView(NSArray<NSArray<NSString*>*>* rows) {
   return scroll;
 }
 
-} // namespace
+}  // namespace
 
-static bool ShowApprovalPromptImpl(const RunOptions& options,
-                                   std::string_view request_id,
-                                   AuthorizationContext& context,
-                                   std::string_view reason,
-                                   KeychainError& error) {
+static bool ShowApprovalPromptImpl(const RunOptions& options, std::string_view request_id,
+                                   PreviewAuthorization& context, std::string_view reason,
+                                   PreviewError& error) {
   @autoreleasepool {
     [NSApplication sharedApplication];
     [NSApp setActivationPolicy:NSApplicationActivationPolicyAccessory];
@@ -1023,39 +905,35 @@ static bool ShowApprovalPromptImpl(const RunOptions& options,
     NSString* executable = MakeString(options.executable.canonical_path);
     NSString* child = executable.lastPathComponent;
     NSString* title = child.length > 0
-        ? [NSString stringWithFormat:@"Allow %@ to use %@?", child, credentials]
-        : MakeString(reason);
+                          ? [NSString stringWithFormat:@"Allow %@ to use %@?", child, credentials]
+                          : MakeString(reason);
     NSPanel* panel = RequestPanel(360, 256, title);
-    FnoxPanelButton* cancel = PanelButton(
-        panel, @"Cancel", NSMakeRect(62, 18, 112, 30),
-        NSAlertFirstButtonReturn);
+    FnoxPanelButton* cancel =
+        PanelButton(panel, @"Cancel", NSMakeRect(62, 18, 112, 30), NSAlertFirstButtonReturn);
     cancel.keyEquivalent = @"\033";
     ((NSButtonCell*)cancel.cell).highlightsBy = NSNoCellMask;
-    cancel.contentTintColor = fnox::ApprovalCancelTitleColor(
-        cancel.effectiveAppearance);
-    cancel.attributedTitle = [[NSAttributedString alloc] initWithString:@"Cancel"
-        attributes:@{NSFontAttributeName: cancel.font,
-                     NSForegroundColorAttributeName:
-                         fnox::ApprovalCancelTitleColor(cancel.effectiveAppearance)}];
+    cancel.contentTintColor = fnox::ApprovalCancelTitleColor(cancel.effectiveAppearance);
+    cancel.attributedTitle = [[NSAttributedString alloc]
+        initWithString:@"Cancel"
+            attributes:@{
+              NSFontAttributeName : cancel.font,
+              NSForegroundColorAttributeName :
+                  fnox::ApprovalCancelTitleColor(cancel.effectiveAppearance)
+            }];
     cancel.showsLinkCursor = YES;
     panel.initialFirstResponder = cancel;
-    FnoxPanelButton* details = PanelButton(panel, @"Details",
-        NSMakeRect(186, 18, 112, 30), NSAlertSecondButtonReturn);
+    FnoxPanelButton* details =
+        PanelButton(panel, @"Details", NSMakeRect(186, 18, 112, 30), NSAlertSecondButtonReturn);
     details.image = [NSImage imageWithSystemSymbolName:@"chevron.right"
-                               accessibilityDescription:@"Expand details"];
+                              accessibilityDescription:@"Expand details"];
     details.imagePosition = NSImageRight;
     details.imageHugsTitle = YES;
     StyleBrandButtonTitle(details, @"Details");
     details.showsLinkCursor = YES;
     details.toolTip = @"Show Touch ID request details";
     details.accessibilityLabel = details.toolTip;
-    FnoxInstructionLabel* instruction =
-        [[FnoxInstructionLabel alloc] initWithFrame:NSZeroRect];
-#ifdef FNOX_TOUCH_PREVIEW
+    FnoxInstructionLabel* instruction = [[FnoxInstructionLabel alloc] initWithFrame:NSZeroRect];
     instruction.stringValue = @"Touch ID to continue";
-#else
-    instruction.stringValue = @"Touch ID to continue";
-#endif
     instruction.bezeled = NO;
     instruction.drawsBackground = NO;
     instruction.focusRingType = NSFocusRingTypeNone;
@@ -1063,40 +941,40 @@ static bool ShowApprovalPromptImpl(const RunOptions& options,
     instruction.alignment = NSTextAlignmentCenter;
     instruction.selectable = NO;
     [ApprovalContent(panel) addSubview:instruction];
-    FnoxTextShimmer* instructionShimmer =
-        [[FnoxTextShimmer alloc] initWithLabel:instruction];
+    FnoxTextShimmer* instructionShimmer = [[FnoxTextShimmer alloc] initWithLabel:instruction];
     NSFont* compactInstructionFont = instruction.font;
     [instructionShimmer setEnabled:YES];
-    NSView* authenticationHost = [[NSView alloc] initWithFrame:
-        AuthenticationHostFrame(ApprovalContent(panel).bounds.size, 72)];
+    NSView* authenticationHost = [[NSView alloc]
+        initWithFrame:AuthenticationHostFrame(ApprovalContent(panel).bounds.size, 72)];
     authenticationHost.wantsLayer = YES;
     authenticationHost.layer.masksToBounds = YES;
-    LAAuthenticationView* authenticationView = [[LAAuthenticationView alloc]
-        initWithContext:context.NativeContext() controlSize:NSControlSizeRegular];
+    LAAuthenticationView* authenticationView =
+        [[LAAuthenticationView alloc] initWithContext:context.NativeContext()
+                                          controlSize:NSControlSizeRegular];
     authenticationView.frame = authenticationHost.bounds;
     FnoxFingerprintShieldView* fingerprintShield = nil;
     if (@available(macOS 26.0, *)) {
       authenticationView.wantsLayer = YES;
       authenticationView.layer.mask = [CALayer layer];
     }
-    FnoxFingerprintView* fingerprint = [[FnoxFingerprintView alloc]
-        initWithFrame:authenticationHost.frame];
+    FnoxFingerprintView* fingerprint =
+        [[FnoxFingerprintView alloc] initWithFrame:authenticationHost.frame];
     fingerprint.accessibilityLabel = @"Touch ID fingerprint";
     [ApprovalContent(panel) addSubview:authenticationHost];
     const NSRect compactFingerprintFrame = authenticationHost.frame;
-    PrepareFingerprintForAuthentication(
-        ApprovalContent(panel), authenticationHost, authenticationView,
-        fingerprintShield, fingerprint, compactFingerprintFrame);
-    [ApprovalContent(panel) addSubview:instruction
-                           positioned:NSWindowAbove relativeTo:fingerprint];
+    PrepareFingerprintForAuthentication(ApprovalContent(panel), authenticationHost,
+                                        authenticationView, fingerprintShield, fingerprint,
+                                        compactFingerprintFrame);
+    [ApprovalContent(panel) addSubview:instruction positioned:NSWindowAbove relativeTo:fingerprint];
     [panel center];
     NSRect panelFrame = panel.frame;
     panelFrame.origin.y -= 10;
     [panel setFrame:panelFrame display:NO];
     NSTextField* heading = PanelHeading(panel);
     const NSSize compactPanelSize = panel.frame.size;
-    NSArray<NSView*>* compactViews = @[heading, cancel, details, instruction];
-    NSMutableArray<NSValue*>* compactFrameValues = [NSMutableArray arrayWithCapacity:compactViews.count];
+    NSArray<NSView*>* compactViews = @[ heading, cancel, details, instruction ];
+    NSMutableArray<NSValue*>* compactFrameValues =
+        [NSMutableArray arrayWithCapacity:compactViews.count];
     for (NSView* view in compactViews) {
       [compactFrameValues addObject:[NSValue valueWithRect:view.frame]];
     }
@@ -1112,20 +990,21 @@ static bool ShowApprovalPromptImpl(const RunOptions& options,
     __block BOOL showingDetails = NO;
     __block BOOL transitioningDetails = NO;
     __block BOOL verifying = NO;
-    __block NSArray<NSView*>* keyboardControls = @[cancel, details];
+    __block NSArray<NSView*>* keyboardControls = @[ cancel, details ];
     __block NSUInteger keyboardFocusIndex = 0;
-#ifdef FNOX_TOUCH_PREVIEW
     __block BOOL showKeyboardHint = NO;
-    NSTimer* previewHintTimer = [NSTimer scheduledTimerWithTimeInterval:2.8
-        repeats:YES block:^(NSTimer* timer) {
-      (void)timer;
-      if (verifying) return;
-      showKeyboardHint = !showKeyboardHint;
-      instruction.stringValue = showKeyboardHint
-          ? @"⇧ + ↩ to accept" : @"Touch ID to continue";
-      [instructionShimmer update];
-    }];
-#endif
+    NSTimer* previewHintTimer =
+        [NSTimer scheduledTimerWithTimeInterval:2.8
+                                        repeats:YES
+                                          block:^(NSTimer* timer) {
+                                            (void)timer;
+                                            if (verifying) return;
+                                            showKeyboardHint = !showKeyboardHint;
+                                            instruction.stringValue = showKeyboardHint
+                                                                          ? @"⇧ + ↩ to accept"
+                                                                          : @"Touch ID to continue";
+                                            [instructionShimmer update];
+                                          }];
     instruction.actionHandler = ^{
       if (!transitioningDetails && !verifying) {
         [fingerprint animateNudge];
@@ -1137,8 +1016,7 @@ static bool ShowApprovalPromptImpl(const RunOptions& options,
       if (control.hidden || ![(NSControl*)control isEnabled]) return;
       keyboardFocusIndex = index;
       [panel makeFirstResponder:control];
-      if (detailRows != nil &&
-          [control isDescendantOf:detailRows.documentView]) {
+      if (detailRows != nil && [control isDescendantOf:detailRows.documentView]) {
         [control scrollRectToVisible:control.bounds];
       }
     };
@@ -1147,13 +1025,12 @@ static bool ShowApprovalPromptImpl(const RunOptions& options,
       if (count == 0) return;
       NSResponder* responder = panel.firstResponder;
       NSUInteger current = [responder isKindOfClass:[NSView class]]
-          ? [keyboardControls indexOfObject:(NSView*)responder]
-          : NSNotFound;
+                               ? [keyboardControls indexOfObject:(NSView*)responder]
+                               : NSNotFound;
       if (current == NSNotFound) current = keyboardFocusIndex;
       for (NSUInteger step = 1; step <= count; ++step) {
         const NSInteger candidate =
-            (static_cast<NSInteger>(current) +
-             direction * static_cast<NSInteger>(step) +
+            (static_cast<NSInteger>(current) + direction * static_cast<NSInteger>(step) +
              static_cast<NSInteger>(count) * 2) %
             static_cast<NSInteger>(count);
         const NSUInteger index = static_cast<NSUInteger>(candidate);
@@ -1170,318 +1047,329 @@ static bool ShowApprovalPromptImpl(const RunOptions& options,
       details.enabled = NO;
       if (show) {
         [instructionShimmer setHighlightsVisible:NO];
-        detailRows = DetailRowsView(RequestDetailRows(
-            options, request_id, MakeString(reason)));
+        detailRows = DetailRowsView(RequestDetailRows(options, request_id, MakeString(reason)));
         const CGFloat width = detailRows.frame.size.width + 40;
-        const CGFloat rowsBottom =
-            kExpandedFooterHeight + kExpandedRowsFooterGap;
-        const CGFloat height = detailRows.frame.size.height + rowsBottom +
-            kExpandedRowsHeadingGap + kExpandedHeadingHeight + kExpandedTopInset;
-        detailRows.frame = NSMakeRect(20, rowsBottom, detailRows.frame.size.width,
-                                      detailRows.frame.size.height);
+        const CGFloat rowsBottom = kExpandedFooterHeight + kExpandedRowsFooterGap;
+        const CGFloat height = detailRows.frame.size.height + rowsBottom + kExpandedRowsHeadingGap +
+                               kExpandedHeadingHeight + kExpandedTopInset;
+        detailRows.frame =
+            NSMakeRect(20, rowsBottom, detailRows.frame.size.width, detailRows.frame.size.height);
         detailRows.hidden = YES;
         detailRows.alphaValue = 0;
         [ApprovalContent(panel) addSubview:detailRows];
-        const NSRect hiddenCompactFrame = NSMakeRect(
-            compactFingerprintFrame.origin.x, -104,
-            compactFingerprintFrame.size.width, compactFingerprintFrame.size.height);
-        expandedAuthenticationFrame =
-            AuthenticationHostFrame(NSMakeSize(width, height), 0);
+        const NSRect hiddenCompactFrame =
+            NSMakeRect(compactFingerprintFrame.origin.x, -104, compactFingerprintFrame.size.width,
+                       compactFingerprintFrame.size.height);
+        expandedAuthenticationFrame = AuthenticationHostFrame(NSMakeSize(width, height), 0);
         NSArray<NSValue*>* exitingButtonFrames = @[
           [NSValue valueWithRect:NSOffsetRect(cancel.frame, -kPanelControlTravel, 0)],
-          [NSValue valueWithRect:NSOffsetRect(details.frame, kPanelControlTravel, 0)]];
-        AnimateViewsAndFingerprint(@[heading, cancel, details, instruction],
-            0, fingerprint, hiddenCompactFrame, 0.22, reduceMotion, ^{
-          cancel.hidden = YES;
-          details.hidden = YES;
-          instruction.hidden = YES;
-          fingerprint.alphaValue = 0;
-          fingerprint.hidden = YES;
-          const NSRect expandedFrame = CenteredPanelFrame(panel.frame, width, height);
-          AnimatePanelFrame(panel, panel.frame, expandedFrame, reduceMotion,
-                            compactViews, compactFrames, compactContentSize,
-                            authenticationHost, authenticationView,
-                            fingerprintShield, compactFingerprintFrame,
-                            expandedAuthenticationFrame, ^{
-            heading.stringValue = @"Touch ID request details";
-            heading.frame = NSMakeRect(20, height - kExpandedTopInset -
-                kExpandedHeadingHeight, width - 40, kExpandedHeadingHeight);
-            heading.alignment = NSTextAlignmentCenter;
-            detailRows.hidden = NO;
-            detailRows.alphaValue = 0;
-            details.title = @"";
-            StyleBrandButtonTitle(details, @"");
-            details.image = [NSImage imageWithSystemSymbolName:@"chevron.left"
-                                    accessibilityDescription:@"Back to approval"];
-            details.imagePosition = NSImageOnly;
-            details.showsLinkCursor = YES;
-            [details resetCursorRects];
-            const NSRect expandedDetailsFrame =
-                NSMakeRect(20, kFingerprintClipBottomInset, 36, 30);
-            details.frame = NSOffsetRect(expandedDetailsFrame, -kPanelControlTravel, 0);
-            details.toolTip = @"Return to approval";
-            details.accessibilityLabel = details.toolTip;
-            details.hidden = NO;
-            instruction.font = [NSFont systemFontOfSize:14];
-            const NSRect expandedInstructionFrame = NSMakeRect(
-                width - 220, kFingerprintClipBottomInset - 8, 200, 30);
-            instruction.frame = NSOffsetRect(expandedInstructionFrame,
-                                             kPanelControlTravel, 0);
-            instruction.alignment = NSTextAlignmentRight;
-            instruction.hidden = NO;
-            [instructionShimmer setHighlightsVisible:YES];
-            expandedViews = @[heading, detailRows, details, instruction];
-            expandedFrames = @[[NSValue valueWithRect:heading.frame],
-                               [NSValue valueWithRect:detailRows.frame],
-                               [NSValue valueWithRect:expandedDetailsFrame],
-                               [NSValue valueWithRect:expandedInstructionFrame]];
-            expandedContentSize = ApprovalContent(panel).bounds.size;
-            fingerprint.alphaValue = 0;
-            fingerprint.hidden = YES;
-            AnimateViewsAndFingerprint(@[heading, detailRows, details, instruction],
-                1, fingerprint, expandedAuthenticationFrame, 0.16, reduceMotion, ^{
-              [instructionShimmer update];
-              showingDetails = YES;
-              transitioningDetails = NO;
-              SetApprovalGlassTransition(panel, NO);
-              details.enabled = YES;
-              NSMutableArray<NSView*>* expandedKeyboardControls =
-                  [NSMutableArray arrayWithObject:details];
-              NSView* firstDetailControl = nil;
-              for (NSView* control in detailRows.documentView.subviews) {
-                if (![control isKindOfClass:[FnoxDetailCopyButton class]]) {
-                  continue;
-                }
-                if (firstDetailControl == nil) firstDetailControl = control;
-                [expandedKeyboardControls addObject:control];
-              }
-              keyboardControls = [expandedKeyboardControls copy];
-              const NSUInteger firstDetailIndex =
-                  firstDetailControl != nil
-                      ? [keyboardControls indexOfObject:firstDetailControl]
-                      : 0;
-              focusKeyboardControlAt(firstDetailIndex);
-              if (firstDetailControl == nil) {
-                focusKeyboardControlAt(0);
-              }
-            }, @[details, instruction], @[
-                [NSValue valueWithRect:expandedDetailsFrame],
-                [NSValue valueWithRect:expandedInstructionFrame]],
-                kPanelControlDuration);
-          });
-        }, @[cancel, details], @[
-            exitingButtonFrames[0], exitingButtonFrames[1]],
+          [NSValue valueWithRect:NSOffsetRect(details.frame, kPanelControlTravel, 0)]
+        ];
+        AnimateViewsAndFingerprint(
+            @[ heading, cancel, details, instruction ], 0, fingerprint, hiddenCompactFrame, 0.22,
+            reduceMotion,
+            ^{
+              cancel.hidden = YES;
+              details.hidden = YES;
+              instruction.hidden = YES;
+              fingerprint.alphaValue = 0;
+              fingerprint.hidden = YES;
+              const NSRect expandedFrame = CenteredPanelFrame(panel.frame, width, height);
+              AnimatePanelFrame(
+                  panel, panel.frame, expandedFrame, reduceMotion, compactViews, compactFrames,
+                  compactContentSize, authenticationHost, authenticationView, fingerprintShield,
+                  compactFingerprintFrame, expandedAuthenticationFrame, ^{
+                    heading.stringValue = @"Touch ID request details";
+                    heading.frame =
+                        NSMakeRect(20, height - kExpandedTopInset - kExpandedHeadingHeight,
+                                   width - 40, kExpandedHeadingHeight);
+                    heading.alignment = NSTextAlignmentCenter;
+                    detailRows.hidden = NO;
+                    detailRows.alphaValue = 0;
+                    details.title = @"";
+                    StyleBrandButtonTitle(details, @"");
+                    details.image = [NSImage imageWithSystemSymbolName:@"chevron.left"
+                                              accessibilityDescription:@"Back to approval"];
+                    details.imagePosition = NSImageOnly;
+                    details.showsLinkCursor = YES;
+                    [details resetCursorRects];
+                    const NSRect expandedDetailsFrame =
+                        NSMakeRect(20, kFingerprintClipBottomInset, 36, 30);
+                    details.frame = NSOffsetRect(expandedDetailsFrame, -kPanelControlTravel, 0);
+                    details.toolTip = @"Return to approval";
+                    details.accessibilityLabel = details.toolTip;
+                    details.hidden = NO;
+                    instruction.font = [NSFont systemFontOfSize:14];
+                    const NSRect expandedInstructionFrame =
+                        NSMakeRect(width - 220, kFingerprintClipBottomInset - 8, 200, 30);
+                    instruction.frame =
+                        NSOffsetRect(expandedInstructionFrame, kPanelControlTravel, 0);
+                    instruction.alignment = NSTextAlignmentRight;
+                    instruction.hidden = NO;
+                    [instructionShimmer setHighlightsVisible:YES];
+                    expandedViews = @[ heading, detailRows, details, instruction ];
+                    expandedFrames = @[
+                      [NSValue valueWithRect:heading.frame],
+                      [NSValue valueWithRect:detailRows.frame],
+                      [NSValue valueWithRect:expandedDetailsFrame],
+                      [NSValue valueWithRect:expandedInstructionFrame]
+                    ];
+                    expandedContentSize = ApprovalContent(panel).bounds.size;
+                    fingerprint.alphaValue = 0;
+                    fingerprint.hidden = YES;
+                    AnimateViewsAndFingerprint(
+                        @[ heading, detailRows, details, instruction ], 1, fingerprint,
+                        expandedAuthenticationFrame, 0.16, reduceMotion,
+                        ^{
+                          [instructionShimmer update];
+                          showingDetails = YES;
+                          transitioningDetails = NO;
+                          SetApprovalGlassTransition(panel, NO);
+                          details.enabled = YES;
+                          NSMutableArray<NSView*>* expandedKeyboardControls =
+                              [NSMutableArray arrayWithObject:details];
+                          NSView* firstDetailControl = nil;
+                          for (NSView* control in detailRows.documentView.subviews) {
+                            if (![control isKindOfClass:[FnoxDetailCopyButton class]]) {
+                              continue;
+                            }
+                            if (firstDetailControl == nil) firstDetailControl = control;
+                            [expandedKeyboardControls addObject:control];
+                          }
+                          keyboardControls = [expandedKeyboardControls copy];
+                          const NSUInteger firstDetailIndex =
+                              firstDetailControl != nil
+                                  ? [keyboardControls indexOfObject:firstDetailControl]
+                                  : 0;
+                          focusKeyboardControlAt(firstDetailIndex);
+                          if (firstDetailControl == nil) {
+                            focusKeyboardControlAt(0);
+                          }
+                        },
+                        @[ details, instruction ],
+                        @[
+                          [NSValue valueWithRect:expandedDetailsFrame],
+                          [NSValue valueWithRect:expandedInstructionFrame]
+                        ],
+                        kPanelControlDuration);
+                  });
+            },
+            @[ cancel, details ], @[ exitingButtonFrames[0], exitingButtonFrames[1] ],
             kPanelControlDuration);
         return;
       }
       const NSRect offscreenExpandedFrame =
           NSOffsetRect(fingerprint.frame, 0, -104 - fingerprint.frame.origin.y);
-      const NSRect backOffscreenFrame =
-          NSOffsetRect(details.frame, -kPanelControlTravel, 0);
+      const NSRect backOffscreenFrame = NSOffsetRect(details.frame, -kPanelControlTravel, 0);
       const NSRect instructionOffscreenFrame =
           NSOffsetRect(instruction.frame, kPanelControlTravel, 0);
-      AnimateViewsAndFingerprint(@[heading, detailRows, details, instruction],
-          0, fingerprint, offscreenExpandedFrame, 0.22, reduceMotion, ^{
-        detailRows.hidden = YES;
-        details.hidden = YES;
-        instruction.hidden = YES;
-        fingerprint.alphaValue = 0;
-        fingerprint.hidden = YES;
-        const NSRect compactFrame = CenteredPanelFrame(panel.frame,
-            compactPanelSize.width, compactPanelSize.height);
-        AnimatePanelFrame(panel, panel.frame, compactFrame, reduceMotion,
-                          expandedViews, expandedFrames, expandedContentSize,
-                          authenticationHost, authenticationView,
-                          fingerprintShield, expandedAuthenticationFrame,
-                          compactFingerprintFrame, ^{
-          StyleApprovalHeading(heading, title, credentials);
-          heading.alignment = NSTextAlignmentCenter;
-          instruction.font = compactInstructionFont;
-          instruction.alignment = NSTextAlignmentCenter;
-          details.title = @"Details";
-          StyleBrandButtonTitle(details, @"Details");
-          details.image = [NSImage imageWithSystemSymbolName:@"chevron.right"
-                                    accessibilityDescription:@"Expand details"];
-          details.imagePosition = NSImageRight;
-          details.imageHugsTitle = YES;
-          details.showsLinkCursor = YES;
-          [details resetCursorRects];
-          details.frame = compactFrames[2].rectValue;
-          details.toolTip = @"Show Touch ID request details";
-          details.accessibilityLabel = details.toolTip;
-          for (NSUInteger index = 0; index < compactViews.count; ++index) {
-            compactViews[index].frame = compactFrames[index].rectValue;
-          }
-          fingerprint.frame = NSOffsetRect(compactFingerprintFrame, 0, -104);
-          fingerprint.hidden = NO;
-          fingerprint.alphaValue = 0;
-          cancel.hidden = NO;
-          details.hidden = NO;
-          instruction.hidden = verifying;
-          [instructionShimmer setHighlightsVisible:!verifying];
-          if (verifying) {
-            cancel.alphaValue = 0;
-            details.alphaValue = 0;
-            heading.alphaValue = 1;
-            AnimateViewsAndFingerprint(@[fingerprint], 1, fingerprint,
-                compactFingerprintFrame, 0.16, reduceMotion, ^{
-              [instructionShimmer update];
-              showingDetails = NO;
-              transitioningDetails = NO;
-              SetApprovalGlassTransition(panel, NO);
-              details.enabled = YES;
-              keyboardControls = @[cancel, details];
-              focusKeyboardControlAt(1);
-            });
-            return;
-          }
-          cancel.frame = NSOffsetRect(compactFrames[1].rectValue,
-                                      -kPanelControlTravel, 0);
-          details.frame = NSOffsetRect(compactFrames[2].rectValue,
-                                       kPanelControlTravel, 0);
-          cancel.alphaValue = 0;
-          details.alphaValue = 0;
-          AnimateViewsAndFingerprint(@[fingerprint, cancel, details], 1,
-              fingerprint, compactFingerprintFrame, kPanelControlDuration,
-              reduceMotion, ^{
-            AnimateViewsAndFingerprint(@[heading, instruction], 1, fingerprint,
-                fingerprint.frame, 0.07, reduceMotion, ^{
-              [instructionShimmer update];
-              showingDetails = NO;
-              transitioningDetails = NO;
-              SetApprovalGlassTransition(panel, NO);
-              details.enabled = YES;
-              keyboardControls = @[cancel, details];
-              focusKeyboardControlAt(1);
-            });
-          }, @[cancel, details], @[
-              [NSValue valueWithRect:compactFrames[1].rectValue],
-              [NSValue valueWithRect:compactFrames[2].rectValue]],
-              kPanelControlDuration);
-        });
-      }, @[details, instruction], @[
-          [NSValue valueWithRect:backOffscreenFrame],
-          [NSValue valueWithRect:instructionOffscreenFrame]],
+      AnimateViewsAndFingerprint(
+          @[ heading, detailRows, details, instruction ], 0, fingerprint, offscreenExpandedFrame,
+          0.22, reduceMotion,
+          ^{
+            detailRows.hidden = YES;
+            details.hidden = YES;
+            instruction.hidden = YES;
+            fingerprint.alphaValue = 0;
+            fingerprint.hidden = YES;
+            const NSRect compactFrame =
+                CenteredPanelFrame(panel.frame, compactPanelSize.width, compactPanelSize.height);
+            AnimatePanelFrame(
+                panel, panel.frame, compactFrame, reduceMotion, expandedViews, expandedFrames,
+                expandedContentSize, authenticationHost, authenticationView, fingerprintShield,
+                expandedAuthenticationFrame, compactFingerprintFrame, ^{
+                  StyleApprovalHeading(heading, title, credentials);
+                  heading.alignment = NSTextAlignmentCenter;
+                  instruction.font = compactInstructionFont;
+                  instruction.alignment = NSTextAlignmentCenter;
+                  details.title = @"Details";
+                  StyleBrandButtonTitle(details, @"Details");
+                  details.image = [NSImage imageWithSystemSymbolName:@"chevron.right"
+                                            accessibilityDescription:@"Expand details"];
+                  details.imagePosition = NSImageRight;
+                  details.imageHugsTitle = YES;
+                  details.showsLinkCursor = YES;
+                  [details resetCursorRects];
+                  details.frame = compactFrames[2].rectValue;
+                  details.toolTip = @"Show Touch ID request details";
+                  details.accessibilityLabel = details.toolTip;
+                  for (NSUInteger index = 0; index < compactViews.count; ++index) {
+                    compactViews[index].frame = compactFrames[index].rectValue;
+                  }
+                  fingerprint.frame = NSOffsetRect(compactFingerprintFrame, 0, -104);
+                  fingerprint.hidden = NO;
+                  fingerprint.alphaValue = 0;
+                  cancel.hidden = NO;
+                  details.hidden = NO;
+                  instruction.hidden = verifying;
+                  [instructionShimmer setHighlightsVisible:!verifying];
+                  if (verifying) {
+                    cancel.alphaValue = 0;
+                    details.alphaValue = 0;
+                    heading.alphaValue = 1;
+                    AnimateViewsAndFingerprint(@[ fingerprint ], 1, fingerprint,
+                                               compactFingerprintFrame, 0.16, reduceMotion, ^{
+                                                 [instructionShimmer update];
+                                                 showingDetails = NO;
+                                                 transitioningDetails = NO;
+                                                 SetApprovalGlassTransition(panel, NO);
+                                                 details.enabled = YES;
+                                                 keyboardControls = @[ cancel, details ];
+                                                 focusKeyboardControlAt(1);
+                                               });
+                    return;
+                  }
+                  cancel.frame = NSOffsetRect(compactFrames[1].rectValue, -kPanelControlTravel, 0);
+                  details.frame = NSOffsetRect(compactFrames[2].rectValue, kPanelControlTravel, 0);
+                  cancel.alphaValue = 0;
+                  details.alphaValue = 0;
+                  AnimateViewsAndFingerprint(
+                      @[ fingerprint, cancel, details ], 1, fingerprint, compactFingerprintFrame,
+                      kPanelControlDuration, reduceMotion,
+                      ^{
+                        AnimateViewsAndFingerprint(@[ heading, instruction ], 1, fingerprint,
+                                                   fingerprint.frame, 0.07, reduceMotion, ^{
+                                                     [instructionShimmer update];
+                                                     showingDetails = NO;
+                                                     transitioningDetails = NO;
+                                                     SetApprovalGlassTransition(panel, NO);
+                                                     details.enabled = YES;
+                                                     keyboardControls = @[ cancel, details ];
+                                                     focusKeyboardControlAt(1);
+                                                   });
+                      },
+                      @[ cancel, details ],
+                      @[
+                        [NSValue valueWithRect:compactFrames[1].rectValue],
+                        [NSValue valueWithRect:compactFrames[2].rectValue]
+                      ],
+                      kPanelControlDuration);
+                });
+          },
+          @[ details, instruction ],
+          @[
+            [NSValue valueWithRect:backOffscreenFrame],
+            [NSValue valueWithRect:instructionOffscreenFrame]
+          ],
           kPanelControlDuration);
     };
     [NSApp activateIgnoringOtherApps:YES];
     [panel makeKeyAndOrderFront:nil];
     NSModalSession session = [NSApp beginModalSessionForWindow:panel];
     bool cancelled = false;
-    details.actionHandler = ^{ toggleDetails(showingDetails == NO); };
+    details.actionHandler = ^{
+      toggleDetails(showingDetails == NO);
+    };
     id authenticationClickMonitor = [NSEvent
         addLocalMonitorForEventsMatchingMask:NSEventMaskLeftMouseDown
-        handler:^NSEvent*(NSEvent* event) {
-          if (event.window == panel) {
-            ((FnoxApprovalPanel*)panel).keyboardFocusVisible = NO;
-            for (NSView* control in keyboardControls) [control setNeedsDisplay:YES];
-          }
-          if (event.window != panel || transitioningDetails || verifying) {
-            return event;
-          }
-          const NSPoint point = [ApprovalContent(panel)
-              convertPoint:event.locationInWindow fromView:nil];
-          const NSRect authenticationFrame = [authenticationHost
-              convertRect:authenticationHost.bounds toView:ApprovalContent(panel)];
-          if (NSPointInRect(point, authenticationFrame) ||
-              NSPointInRect(point, fingerprint.frame)) {
-            [fingerprint animateNudge];
-          }
-          return event;
-        }];
+                                     handler:^NSEvent*(NSEvent* event) {
+                                       if (event.window == panel) {
+                                         ((FnoxApprovalPanel*)panel).keyboardFocusVisible = NO;
+                                         for (NSView* control in keyboardControls)
+                                           [control setNeedsDisplay:YES];
+                                       }
+                                       if (event.window != panel || transitioningDetails ||
+                                           verifying) {
+                                         return event;
+                                       }
+                                       const NSPoint point = [ApprovalContent(panel)
+                                           convertPoint:event.locationInWindow
+                                               fromView:nil];
+                                       const NSRect authenticationFrame =
+                                           [authenticationHost convertRect:authenticationHost.bounds
+                                                                    toView:ApprovalContent(panel)];
+                                       if (NSPointInRect(point, authenticationFrame) ||
+                                           NSPointInRect(point, fingerprint.frame)) {
+                                         [fingerprint animateNudge];
+                                       }
+                                       return event;
+                                     }];
     id keyboardMonitor = [NSEvent
         addLocalMonitorForEventsMatchingMask:NSEventMaskKeyDown
-        handler:^NSEvent*(NSEvent* event) {
-          if (event.window != panel || transitioningDetails || verifying) {
-            return event;
-          }
-          const NSUInteger key = event.keyCode;
-#ifdef FNOX_TOUCH_PREVIEW
-          if ((key == 36 || key == 76) &&
-              (event.modifierFlags & NSEventModifierFlagShift) != 0) {
-            FnoxPreviewAcceptTouchId();
-            return nil;
-          }
-#endif
-          NSResponder* responder = panel.firstResponder;
-          const NSUInteger focusedIndex =
-              [responder isKindOfClass:[NSView class]]
-                  ? [keyboardControls indexOfObject:(NSView*)responder]
-                  : NSNotFound;
-          if (key == 48 ||
-              ((key == 123 || key == 124) && focusedIndex != NSNotFound)) {
-            if (key == 48) ((FnoxApprovalPanel*)panel).keyboardFocusVisible = YES;
-            for (NSView* control in keyboardControls) [control setNeedsDisplay:YES];
-            NSInteger direction = key == 123 ? -1 : 1;
-            if (key == 48 &&
-                (event.modifierFlags & NSEventModifierFlagShift) != 0) {
-              direction = -1;
-            }
-            moveKeyboardFocus(direction);
-            return nil;
-          }
-          if (key == 36 || key == 49) {
-            const NSUInteger index =
-                [responder isKindOfClass:[NSView class]]
-                    ? [keyboardControls indexOfObject:(NSView*)responder]
-                    : NSNotFound;
-            if (index != NSNotFound &&
-                [keyboardControls[index] isKindOfClass:[NSButton class]]) {
-              [(NSButton*)keyboardControls[index] performClick:nil];
-              return nil;
-            }
-          }
-          return event;
-        }];
-    fnox::ApprovalReadinessGate readinessGate;
-#ifdef FNOX_TOUCH_PREVIEW
-    const auto readinessDeadline = std::chrono::steady_clock::time_point::max();
-#else
-    const auto readinessDeadline = std::chrono::steady_clock::now() +
-                                   kApprovalReadinessTimeout;
-#endif
+                                     handler:^NSEvent*(NSEvent* event) {
+                                       if (event.window != panel || transitioningDetails ||
+                                           verifying) {
+                                         return event;
+                                       }
+                                       const NSUInteger key = event.keyCode;
+                                       if ((key == 36 || key == 76) &&
+                                           (event.modifierFlags & NSEventModifierFlagShift) != 0) {
+                                         FnoxPreviewAcceptTouchId();
+                                         return nil;
+                                       }
+                                       NSResponder* responder = panel.firstResponder;
+                                       const NSUInteger focusedIndex =
+                                           [responder isKindOfClass:[NSView class]]
+                                               ? [keyboardControls indexOfObject:(NSView*)responder]
+                                               : NSNotFound;
+                                       if (key == 48 || ((key == 123 || key == 124) &&
+                                                         focusedIndex != NSNotFound)) {
+                                         if (key == 48)
+                                           ((FnoxApprovalPanel*)panel).keyboardFocusVisible = YES;
+                                         for (NSView* control in keyboardControls)
+                                           [control setNeedsDisplay:YES];
+                                         NSInteger direction = key == 123 ? -1 : 1;
+                                         if (key == 48 && (event.modifierFlags &
+                                                           NSEventModifierFlagShift) != 0) {
+                                           direction = -1;
+                                         }
+                                         moveKeyboardFocus(direction);
+                                         return nil;
+                                       }
+                                       if (key == 36 || key == 49) {
+                                         const NSUInteger index =
+                                             [responder isKindOfClass:[NSView class]]
+                                                 ? [keyboardControls
+                                                       indexOfObject:(NSView*)responder]
+                                                 : NSNotFound;
+                                         if (index != NSNotFound &&
+                                             [keyboardControls[index]
+                                                 isKindOfClass:[NSButton class]]) {
+                                           [(NSButton*)keyboardControls[index] performClick:nil];
+                                           return nil;
+                                         }
+                                       }
+                                       return event;
+                                     }];
+    const auto readinessDeadline = std::chrono::steady_clock::now() + kApprovalReadinessTimeout;
     auto readiness = fnox::ApprovalReadinessStatus::kWaiting;
     while (readiness == fnox::ApprovalReadinessStatus::kWaiting) {
       const NSModalResponse response = [NSApp runModalSession:session];
       if (response != NSModalResponseContinue) {
         cancelled = true;
       }
-#ifdef FNOX_TOUCH_PREVIEW
-      readiness = (NSApp.isActive && panel.isKeyWindow && panel.isVisible &&
-                   panel.alphaValue > 0)
-          ? fnox::ApprovalReadinessStatus::kReady
-          : fnox::ApprovalReadinessStatus::kWaiting;
-#else
-      readiness = readinessGate.Observe(
-          ApprovalPresentationStateFor(panel, authenticationHost,
-                                       authenticationView),
-          cancelled, std::chrono::steady_clock::now() >= readinessDeadline);
-#endif
+      if (cancelled) {
+        readiness = fnox::ApprovalReadinessStatus::kCancelled;
+        break;
+      }
+      if (std::chrono::steady_clock::now() >= readinessDeadline) {
+        readiness = fnox::ApprovalReadinessStatus::kUnavailable;
+        break;
+      }
+      readiness = (NSApp.isActive && panel.isKeyWindow && panel.isVisible && panel.alphaValue > 0)
+                      ? fnox::ApprovalReadinessStatus::kReady
+                      : fnox::ApprovalReadinessStatus::kWaiting;
       if (readiness == fnox::ApprovalReadinessStatus::kWaiting) {
-        const double remaining = std::chrono::duration<double>(
-            readinessDeadline - std::chrono::steady_clock::now()).count();
+        const double remaining =
+            std::chrono::duration<double>(readinessDeadline - std::chrono::steady_clock::now())
+                .count();
         [[NSRunLoop currentRunLoop]
-            runUntilDate:[NSDate dateWithTimeIntervalSinceNow:
-                              std::min(0.01, remaining)]];
+            runUntilDate:[NSDate dateWithTimeIntervalSinceNow:std::min(0.01, remaining)]];
       }
     }
     const bool authenticated =
         readiness == fnox::ApprovalReadinessStatus::kReady &&
-        context.AuthenticateWithEvents(
-            reason, error, [&cancelled, &session, &context] {
-              if (cancelled)
-                return;
-              const NSModalResponse response = [NSApp runModalSession:session];
-              if (response == NSModalResponseContinue)
-                return;
-              cancelled = true;
-              context.Invalidate();
-            });
+        context.AuthenticateWithEvents(reason, error, [&cancelled, &session, &context] {
+          if (cancelled) return;
+          const NSModalResponse response = [NSApp runModalSession:session];
+          if (response == NSModalResponseContinue) return;
+          cancelled = true;
+          context.Invalidate();
+        });
     if (authenticated && !cancelled) {
       NSDate* scanStartedAt = nil;
       while (transitioningDetails) {
-        [[NSRunLoop currentRunLoop]
-            runUntilDate:[NSDate dateWithTimeIntervalSinceNow:1.0 / 60.0]];
+        [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:1.0 / 60.0]];
       }
       [instructionShimmer setEnabled:NO];
       instruction.hidden = YES;
@@ -1498,8 +1386,7 @@ static bool ShowApprovalPromptImpl(const RunOptions& options,
       }
       const bool fingerprintVisible = PresentAuthenticatedFingerprint(
           ApprovalContent(panel), authenticationView, fingerprint,
-          [authenticationHost convertRect:authenticationHost.bounds
-                                   toView:ApprovalContent(panel)],
+          [authenticationHost convertRect:authenticationHost.bounds toView:ApprovalContent(panel)],
           authenticated, cancelled);
       if (!fingerprintVisible) {
         cancelled = true;
@@ -1514,16 +1401,18 @@ static bool ShowApprovalPromptImpl(const RunOptions& options,
           cancel.alphaValue = 0;
           details.alphaValue = 0;
         } else {
-          [NSAnimationContext runAnimationGroup:^(NSAnimationContext* animation) {
-            animation.duration = 0.45;
-            animation.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
-            cancel.animator.alphaValue = 0;
-            details.animator.alphaValue = 0;
-          } completionHandler:nil];
+          [NSAnimationContext
+              runAnimationGroup:^(NSAnimationContext* animation) {
+                animation.duration = 0.45;
+                animation.timingFunction =
+                    [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
+                cancel.animator.alphaValue = 0;
+                details.animator.alphaValue = 0;
+              }
+              completionHandler:nil];
         }
-        const NSTimeInterval duration =
-            FnoxFingerprintApprovalDuration(
-                NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion);
+        const NSTimeInterval duration = FnoxFingerprintApprovalDuration(
+            NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion);
         NSDate* deadline = [scanStartedAt dateByAddingTimeInterval:duration];
         while (deadline.timeIntervalSinceNow > 0) {
           const NSModalResponse response = [NSApp runModalSession:session];
@@ -1536,64 +1425,65 @@ static bool ShowApprovalPromptImpl(const RunOptions& options,
             cancelled = true;
             break;
           }
-          [NSRunLoop.currentRunLoop runUntilDate:
-              [NSDate dateWithTimeIntervalSinceNow:MIN(0.01, deadline.timeIntervalSinceNow)]];
+          [NSRunLoop.currentRunLoop
+              runUntilDate:[NSDate
+                               dateWithTimeIntervalSinceNow:MIN(0.01,
+                                                                deadline.timeIntervalSinceNow)]];
         }
       }
     }
     [NSApp endModalSession:session];
     if (cancelled) {
       while (transitioningDetails) {
-        [NSRunLoop.currentRunLoop runUntilDate:
-            [NSDate dateWithTimeIntervalSinceNow:0.01]];
+        [NSRunLoop.currentRunLoop runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.01]];
       }
       __block BOOL dismissed = NO;
-      [NSAnimationContext runAnimationGroup:^(NSAnimationContext* animation) {
-        animation.duration = reduceMotion ? 0.12 : 0.1;
-        animation.timingFunction = [CAMediaTimingFunction
-            functionWithControlPoints:0.12f :0.8f :0.2f :1.0f];
-        if (!reduceMotion) {
-          const NSRect frame = panel.frame;
-          [panel.animator setFrame:NSInsetRect(frame,
-              -NSWidth(frame) * 0.09, -NSHeight(frame) * 0.09) display:YES];
-        }
-        panel.animator.alphaValue = 0;
-      } completionHandler:^{ dismissed = YES; }];
+      [NSAnimationContext
+          runAnimationGroup:^(NSAnimationContext* animation) {
+            animation.duration = reduceMotion ? 0.12 : 0.1;
+            animation.timingFunction =
+                [CAMediaTimingFunction functionWithControlPoints:0.12f:0.8f:0.2f:1.0f];
+            if (!reduceMotion) {
+              const NSRect frame = panel.frame;
+              [panel.animator
+                  setFrame:NSInsetRect(frame, -NSWidth(frame) * 0.09, -NSHeight(frame) * 0.09)
+                   display:YES];
+            }
+            panel.animator.alphaValue = 0;
+          }
+          completionHandler:^{
+            dismissed = YES;
+          }];
       while (!dismissed) {
-        [NSRunLoop.currentRunLoop runUntilDate:
-            [NSDate dateWithTimeIntervalSinceNow:0.01]];
+        [NSRunLoop.currentRunLoop runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.01]];
       }
     }
     [panel orderOut:nil];
-#ifdef FNOX_TOUCH_PREVIEW
     [previewHintTimer invalidate];
-#endif
     [NSEvent removeMonitor:authenticationClickMonitor];
     [NSEvent removeMonitor:keyboardMonitor];
     if (cancelled) {
       context.Invalidate();
-      error.status = KeychainStatus::kDenied;
+      error.status = PreviewStatus::kDenied;
       error.detail = "Approval cancelled.";
       return false;
     }
     if (readiness == fnox::ApprovalReadinessStatus::kUnavailable) {
       context.Invalidate();
-      error.status = KeychainStatus::kUnavailable;
+      error.status = PreviewStatus::kUnavailable;
       error.os_status = 0;
-      error.detail =
-          "Authentication unavailable: approval interface did not become "
-          "active and visible.";
+      error.detail = "Authentication unavailable: approval interface did not become "
+                     "active and visible.";
       return false;
     }
     return authenticated;
   }
 }
 
-bool ShowApprovalPrompt(const RunOptions& options,
-                        std::string_view request_id,
-                        AuthorizationContext& context, std::string_view reason,
-                        KeychainError& error) {
+bool ShowApprovalPrompt(const RunOptions& options, std::string_view request_id,
+                        PreviewAuthorization& context, std::string_view reason,
+                        PreviewError& error) {
   return ShowApprovalPromptImpl(options, request_id, context, reason, error);
 }
 
-} // namespace fnox
+}  // namespace fnox
