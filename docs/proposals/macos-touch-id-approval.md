@@ -30,17 +30,21 @@ Never pass secret values to the UI. Bind an approval to one request and prevent 
 
 ## macOS implementation questions
 
-Apple's Local Authentication APIs support an `LAContext` for biometric policy evaluation, and Keychain access controls can use an authentication context for the protected operation. The implementation should use public APIs and one context for the visible approval and the protected item read. The existing custom prototype uses private app code and should not be copied wholesale.
+Apple's Local Authentication APIs support an `LAContext` for biometric policy evaluation, and Keychain access controls can use an authentication context for the protected operation. The implementation should use public APIs and one context for the visible approval and the protected item read. The included native preview demonstrates presentation only; its simulated approval must not be used to authorize a protected Keychain read.
 
 The release workflow already imports the Developer ID certificate and signs and notarizes the macOS `fnox` binary. A separate app/helper bundle may require release packaging and signing changes, but the repository already has the credentials used for Fnox releases; a new certificate does not appear to be the blocker. Maintainers should confirm whether to keep the panel in the signed executable or ship a separately signed helper before implementation.
 
 References: [Apple Local Authentication](https://developer.apple.com/documentation/localauthentication), [Apple Keychain access-control flags](https://developer.apple.com/documentation/security/secaccesscontrolcreateflags), [`fnox` macOS release signing](../../.github/workflows/release.yml).
 
-## Visual direction
+## Runnable native preview
 
-Use Fnox gold and slate in dark mode: a gold `#d4af37` success check and ring on a midnight `#202833` field, with slate `#8c97a7` fingerprint ridges. The gold check has 7.07:1 contrast against the midnight field.
+The [standalone preview](../../native/touch-id-preview/README.md) demonstrates a native glass approval dialog, request details, copy controls, keyboard hints, and fingerprint success animation in light and dark mode. Shift+Return simulates approval. It uses sample metadata and does not read credentials or start a proxy.
 
-Use deep blue and champagne in light mode. Keep a midnight fingerprint field behind the icon so its contrast stays stable over translucent system panels; use champagne `#ddc579` for the success check (8.73:1 against `#202833`) and dark slate `#263241` for button labels on light surfaces. The field also keeps the fingerprint legible when the system panel background changes.
+Dark mode uses Fnox slate, blue, and gold. Light mode is derived from the dark palette with a perceptual color transform and contrast rules; its fingerprint and success mark use blue. The Cancel button and resting fingerprint share their fill. The animation path and timing are independent of the palette.
+
+**The colors are a starting point: please tweak them to taste.** Edit `native/touch-id-preview/theme.mts` to adjust the shared palette and light-mode derivation. The preview ribbon colors are selected in `preview/approval.mm`.
+
+Production integration, OS-enforced biometric Keychain access, approval leases, and signed/notarized distribution remain follow-up work. The preview is not part of the CLI build or release workflow.
 
 ## Maintainer feedback requested
 
