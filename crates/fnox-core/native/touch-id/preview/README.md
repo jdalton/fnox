@@ -1,6 +1,14 @@
 # Fnox verification preview
 
-A standalone developer preview for designing and tweaking the [Fnox Touch ID UI](../../../../../docs/guide/touch-id-preview.md). It shows configurable synthetic request metadata and simulates approval by default. An explicit system mode verifies the current user through the platform API. **Neither mode reads credentials, starts a proxy, or grants a reusable authorization lease.**
+Build and open the preview on macOS with:
+
+```sh
+cmake -S crates/fnox-core/native/touch-id/preview -B /tmp/fnox-touch-id-build -DCMAKE_BUILD_TYPE=Debug
+cmake --build /tmp/fnox-touch-id-build --target fnox-touch-id-preview --parallel 4
+open /tmp/fnox-touch-id-build/fnox-touch-id-preview.app
+```
+
+The preview shows synthetic request metadata. **It does not read credentials, start a proxy, or grant a reusable authorization lease.**
 
 ## Requirements
 
@@ -20,13 +28,13 @@ These optional environment variables configure the preview process:
 
 | Variable                         | Values and effect                                                                          |
 | -------------------------------- | ------------------------------------------------------------------------------------------ |
-| `FNOX_PREVIEW_AUTH`              | `simulate` (default) simulates approval; `system` uses the platform's native verification. |
-| `FNOX_PREVIEW_MODE`              | `screenshot` hides preview labels and simulation hints; unset shows them.                  |
-| `FNOX_PREVIEW_APPEARANCE`        | `light` or `dark` overrides system appearance; unset follows the system.                   |
+| `FNOX_PREVIEW_APPEARANCE`        | `light` or `dark`; unset follows the system appearance.                                    |
+| `FNOX_PREVIEW_AUTH`              | `simulate` (default) or `system` for native verification.                                  |
+| `FNOX_PREVIEW_COMMAND`           | Displayed sample command; default `fnox exec -- ./example.sh`.                             |
 | `FNOX_PREVIEW_CREDENTIAL_NAME`   | Displayed sample credential name; default `EXAMPLE_SECRET`.                                |
 | `FNOX_PREVIEW_CREDENTIAL_SOURCE` | Displayed sample provider; default `Example provider`.                                     |
 | `FNOX_PREVIEW_EXECUTABLE`        | Displayed sample executable path; default `/usr/local/bin/example-command`.                |
-| `FNOX_PREVIEW_COMMAND`           | Displayed sample command; default `fnox exec -- ./example.sh`.                             |
+| `FNOX_PREVIEW_MODE`              | `screenshot` hides preview labels and simulation hints; unset shows them.                  |
 | `FNOX_PREVIEW_PROJECT_DIRECTORY` | Displayed sample project directory; default `/workspace/example`.                          |
 
 The metadata variables only change synthetic display values; the preview never reads Fnox configuration or credentials.
@@ -35,19 +43,14 @@ The metadata variables only change synthetic display values; the preview never r
 
 ### macOS
 
+To launch the executable directly, set the mode before its path:
+
 ```sh
-cmake -S crates/fnox-core/native/touch-id/preview -B /tmp/fnox-touch-id-build -DCMAKE_BUILD_TYPE=Debug
-cmake --build /tmp/fnox-touch-id-build --target fnox-touch-id-preview --parallel 4
-open /tmp/fnox-touch-id-build/fnox-touch-id-preview.app
+FNOX_PREVIEW_AUTH=simulate /tmp/fnox-touch-id-build/fnox-touch-id-preview.app/Contents/MacOS/fnox-touch-id-preview
+FNOX_PREVIEW_AUTH=system /tmp/fnox-touch-id-build/fnox-touch-id-preview.app/Contents/MacOS/fnox-touch-id-preview
 ```
 
 Press **Shift+Return** to simulate approval. Cancel or Escape closes the panel. Details shows request metadata; long command and project values are shortened on screen, while their copy buttons copy the complete sanitized values.
-
-To verify with actual Touch ID, run the executable directly:
-
-```sh
-FNOX_PREVIEW_AUTH=system /tmp/fnox-touch-id-build/fnox-touch-id-preview.app/Contents/MacOS/fnox-touch-id-preview
-```
 
 macOS presents its own authentication dialog. Only biometric success starts the approval animation. Shift+Return cannot approve a system request, and unavailable biometrics or cancellation never fall back to simulation. Success exits with status 0; unsuccessful verification exits with status 1; invalid authentication configuration exits with status 2.
 
